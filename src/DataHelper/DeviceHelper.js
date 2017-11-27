@@ -5,9 +5,9 @@ export function get() {
 }
 
 export function show(id) {
-  return axios.get('http://shed.kent.ac.uk/device/' + id);
+  return axios.get(`http://shed.kent.ac.uk/device/${id}`);
 }
 
 export function showSampleRate(id, sampleRate) {
-  return axios.get('http://shed.kent.ac.uk/device/' + id + '/' + sampleRate);
+  return axios.get(`http://shed.kent.ac.uk/device/${id}/${sampleRate}`);
 }

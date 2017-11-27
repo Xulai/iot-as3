@@ -16,24 +16,28 @@ class DeviceGraph extends Component {
     var self = this;
     
     self.state = {
-      samples: {},
+      samples: [],
       error: false,
     };
 
     DeviceHelper.showSampleRate(this.props.device, "minute")
     .then(function (response) {
 
+
       var data = _.map(response.data.moisture_value, function(arr) {
           return _.keyBy(arr, function(o) {
             return o ? 'value' : 'timestamp';
-        })
+        });
       });
-      console.log(data);
+
+      //console.log(this.state.samples);
 
       self.setState({ 
         samples: data,
         error: false,
       });
+
+      //console.log(this.state.samples);
     }) 
     .catch(function (error) {
       self.setState({ 
@@ -45,6 +49,9 @@ class DeviceGraph extends Component {
   }
   
   render() {
+
+    //console.log(this.state.samples);
+
     return (
       <div>{ this.state.samples && !this.state.error
         ?  <LineChart width={600} height={300} data={this.state.samples} margin={{top: 5, right: 30, left: 20, bottom: 5}}>

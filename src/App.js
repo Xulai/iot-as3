@@ -27,8 +27,10 @@ class App extends Component {
       .catch(function (error) {
         console.log(error);
       });
+
     DeviceHelper.get()
       .then(function (response) {
+        console.log(response)
         self.setState({ 
           sites: self.state.sites,
           devices: response.data

@@ -8,8 +8,8 @@ class Devices extends Component {
   render() {
     return (
       <ListGroup>
-        {this.props.devices ? this.props.devices.map(row => 
-          <ListGroupItem>
+        {this.props.devices ? this.props.devices.map((row, index) => 
+          <ListGroupItem key={index}>
             <DeviceGraph device={row} />
           </ListGroupItem>
         ) : <p>Still Loading</p>}

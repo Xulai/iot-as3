@@ -10,33 +10,33 @@ import './App.css';
 class App extends Component {
   constructor(props) {
     super(props);
-    var self = this;
 
-    self.state = {
+    this.state = {
       sites: [],
       devices: {},
     };
 
     SiteHelper.get()
-      .then(function (response) {
-        self.setState({ 
+      .then(response => {
+        this.setState({ 
           sites: response.data,
-          devices: self.state.devices
+          devices: this.state.devices
         });
+        console.log(this.state.devices);
       }) 
       .catch(function (error) {
         console.log(error);
       });
 
     DeviceHelper.get()
-      .then(function (response) {
+      .then(response =>  {
         console.log(response)
-        self.setState({ 
-          sites: self.state.sites,
+        this.setState({ 
+          sites: this.state.sites,
           devices: response.data
         });
       }) 
-      .catch(function (error) {
+      .catch(error => {
         console.log(error);
       });
   }
@@ -46,6 +46,10 @@ class App extends Component {
   }
 
   render() {
+
+    const { devices } = this.state;
+
+
     return (
       <div className="App">
         <header className="App-header">
@@ -56,18 +60,16 @@ class App extends Component {
           Simple test with graphs
         </p>
         <Tabs id="blah" defaultActiveKey={2}>
-          <Tab eventKey={1} title="Gas" onClick={(e) => this.handleClick()}>
-            <Devices devices={this.state.devices.gas}></Devices>
-          </Tab> 
-          <Tab eventKey={2} title="Hydro">
-            <Devices devices={this.state.devices.hydrometer}></Devices>
-          </Tab>
-          {/* <Tab eventKey={3} title="Solar">
-            <Devices devices={this.state.devices.solar}></Devices>
-          </Tab>
-          <Tab eventKey={4} title="Temperature/Humidity">
-            <Devices devices={this.state.devices.tempHumid}></Devices>
-          </Tab> */}
+          { 
+            /* For every device in the devices object, create a tab with its info */
+            Object.keys(this.state.devices).map((item, i) => (
+
+            /* TODO: for some reason this.state.devices.item as devices prop doesn't work */
+            <Tab eventKey={i} title={item} key={i} name={item}>
+              <Devices devices={this.state.devices.hydrometer}></Devices>
+            </Tab>
+          )
+        )}  
         </Tabs>
       </div>
     );

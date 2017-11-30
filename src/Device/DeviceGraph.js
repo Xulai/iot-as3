@@ -1,47 +1,60 @@
 import React, { Component } from 'react';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
-import LineChart from 'recharts/lib/chart/LineChart';
-import XAxis from 'recharts/lib/cartesian/XAxis';
-import YAxis from 'recharts/lib/cartesian/YAxis';
-import Line from 'recharts/lib/cartesian/Line';
-import CartesianGrid from 'recharts/lib/cartesian/CartesianGrid';
-import Tooltip from 'recharts/lib/component/Tooltip';
-import Legend from 'recharts/lib/component/Legend';
+// import LineChart from 'recharts/lib/chart/LineChart';
+// import XAxis from 'recharts/lib/cartesian/XAxis';
+// import YAxis from 'recharts/lib/cartesian/YAxis';
+// import Line from 'recharts/lib/cartesian/Line';
+// import CartesianGrid from 'recharts/lib/cartesian/CartesianGrid';
+// import Tooltip from 'recharts/lib/component/Tooltip';
+// import Legend from 'recharts/lib/component/Legend';
 import './DeviceGraph.css';
+
+import { Charts, ChartContainer, ChartRow, YAxis, LineChart } from "react-timeseries-charts";
+import { Index, TimeSeries } from "pondjs";
+import * as moment from 'moment';
+
 
 class DeviceGraph extends Component {
   constructor(props) {
     super(props);
-    var self = this;
     
-    self.state = {
+    this.state = {
       samples: [],
       error: false,
     };
+  }
 
-    DeviceHelper.showSampleRate(this.props.device, "minute")
-    .then(function (response) {
+  componentDidMount() {
 
+    this.getValues();
+    console.log('mounted');
+  }
 
-      var data = _.map(response.data.moisture_value, function(arr) {
-          return _.keyBy(arr, function(o) {
-            return o ? 'value' : 'timestamp';
-        });
-      });
+  getValues() {
 
-      //console.log(this.state.samples);
+    DeviceHelper.showSampleRate(this.props.device, "10minute")
+    .then(response => {
 
-      self.setState({ 
-        samples: data,
+      var values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+
+      const data = {
+          "name": "humidity",
+          "columns": ["time", "value"],
+          "points": values
+      };
+
+      var series = new TimeSeries(data);
+
+      this.setState({ 
+        samples: series,
         error: false,
       });
 
-      //console.log(this.state.samples);
     }) 
-    .catch(function (error) {
-      self.setState({ 
-        samples: self.state.samples,
+    .catch(error =>  {
+      this.setState({ 
+        samples: [],
         error: true,
       });
       console.log(error);
@@ -50,20 +63,21 @@ class DeviceGraph extends Component {
   
   render() {
 
-    //console.log(this.state.samples);
+    const { samples, error } = this.state;
 
     return (
-      <div>{ this.state.samples && !this.state.error
-        ?  <LineChart width={600} height={300} data={this.state.samples} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-            <XAxis dataKey="timestamp"/>
-            <YAxis dateKey/>
-            <CartesianGrid strokeDasharray="3 3"/>
-            <Tooltip/>
-            <Legend />
-            <Line type="monotone" dataKey="value" dot={false} stroke="#8884d8"/>
-            </LineChart>
-        : <p>Loading Graph</p>}</div>
-      
+      <div>{ samples.length != 0 && !error 
+      ? 
+      <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
+          <ChartRow height="300">
+              <YAxis id="axis1" label="" min={samples.min()} max={samples.max()} width="100" type="linear" format="$,.2f"/>
+              <Charts>
+                  <LineChart axis="axis1" series={samples}/>
+              </Charts>
+          </ChartRow>
+      </ChartContainer>
+       : <p>Loading Graph</p>}
+      </div>
     );
   }
 }

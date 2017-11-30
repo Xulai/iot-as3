@@ -40,6 +40,11 @@ class App extends Component {
         console.log(error);
       });
   }
+
+  handleClick = () => {
+    console.log('clicked on!');
+  }
+
   render() {
     return (
       <div className="App">
@@ -51,9 +56,9 @@ class App extends Component {
           Simple test with graphs
         </p>
         <Tabs id="blah" defaultActiveKey={2}>
-          {/* <Tab eventKey={1} title="Gas">
+          <Tab eventKey={1} title="Gas" onClick={(e) => this.handleClick()}>
             <Devices devices={this.state.devices.gas}></Devices>
-          </Tab> */}
+          </Tab> 
           <Tab eventKey={2} title="Hydro">
             <Devices devices={this.state.devices.hydrometer}></Devices>
           </Tab>

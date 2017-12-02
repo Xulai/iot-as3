@@ -49,7 +49,6 @@ class App extends Component {
 
     const { devices } = this.state;
 
-
     return (
       <div className="App">
         <header className="App-header">
@@ -61,13 +60,12 @@ class App extends Component {
         </p>
         <Tabs id="blah" defaultActiveKey={2}>
           { 
-            /* For every device in the devices object, create a tab with its info */
+            /* For every device in the devices object */
             Object.keys(this.state.devices).map((item, i) => (
-
-            /* TODO: for some reason this.state.devices.item as devices prop doesn't work */
-            <Tab eventKey={i} title={item} key={i} name={item}>
-              <Devices devices={this.state.devices.hydrometer}></Devices>
-            </Tab>
+              /* Create a tab with its info */
+              <Tab eventKey={i} title={item} key={i} name={item}>
+                <Devices devices={this.state.devices[item]} name={item}></Devices>
+              </Tab>
           )
         )}  
         </Tabs>

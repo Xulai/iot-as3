@@ -36,7 +36,21 @@ class DeviceGraph extends Component {
     DeviceHelper.showSampleRate(this.props.device, "10minute")
     .then(response => {
 
-      var values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      var sensorName;
+
+      if(this.props.name === "lumosity") {
+        sensorName = "light";
+      } else if(this.props.name === "gas") {
+        sensorName = "gas";
+      } else if(this.props.name === "solar") {
+        sensorName = "solar";
+      }
+
+      var find = `${sensorName}_values`;
+
+      console.log(find);
+
+      var values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
 
       const data = {
           "name": "humidity",

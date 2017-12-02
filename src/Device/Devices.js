@@ -10,7 +10,7 @@ class Devices extends Component {
       <ListGroup>
         {this.props.devices ? this.props.devices.map((row, index) => 
           <ListGroupItem key={index}>
-            <DeviceGraph device={row} />
+            <DeviceGraph device={row} name={this.props.name}/>
           </ListGroupItem>
         ) : <p>Still Loading</p>}
       </ListGroup>

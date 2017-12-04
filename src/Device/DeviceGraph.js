@@ -26,9 +26,8 @@ class DeviceGraph extends Component {
   }
 
   componentDidMount() {
-
     this.getValues();
-    console.log('mounted');
+    //console.log('mounted');
   }
 
   getValues() {
@@ -97,10 +96,6 @@ class DeviceGraph extends Component {
 
       var find = `${sensorName}_values`;
 
-      console.log(find);
-
-      
-
       var series = new TimeSeries(data);
 
       this.setState({ 
@@ -125,14 +120,17 @@ class DeviceGraph extends Component {
     return (
       <div>{ samples.length != 0 && !error 
       ? 
-      <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
-          <ChartRow height="300">
-              <YAxis id="axis1" label="" min={samples.min()} max={samples.max()} width="100" type="linear" format=",.2f"/>
-              <Charts>
-                  <LineChart axis="axis1" series={samples}/>
-              </Charts>
-          </ChartRow>
-      </ChartContainer>
+      <div>
+        <h3>{this.props.device}</h3>
+        <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
+            <ChartRow height="300">
+                <YAxis id="axis1" label="" min={samples.min()} max={samples.max()} width="100" type="linear" format=",.2f"/>
+                <Charts>
+                    <LineChart axis="axis1" series={samples}/>
+                </Charts>
+            </ChartRow>
+        </ChartContainer>
+      </div>
        : <p>Loading Graph</p>}
       </div>
     );

@@ -5,6 +5,8 @@ import * as DeviceHelper from './DataHelper/DeviceHelper';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import Devices from './Device/Devices';
+import LocMap from './Map/LocMap';
+import _ from "lodash";
 import './App.css';
 
 class App extends Component {
@@ -22,7 +24,7 @@ class App extends Component {
           sites: response.data,
           devices: this.state.devices
         });
-        console.log(this.state.devices);
+        console.log(response.data);
       }) 
       .catch(function (error) {
         console.log(error);
@@ -30,7 +32,6 @@ class App extends Component {
 
     DeviceHelper.get()
       .then(response =>  {
-        console.log(response)
         this.setState({ 
           sites: this.state.sites,
           devices: response.data
@@ -47,7 +48,7 @@ class App extends Component {
 
   render() {
 
-    const { devices } = this.state;
+    const { devices, sites } = this.state;
 
     return (
       <div className="App">
@@ -66,8 +67,14 @@ class App extends Component {
               <Tab eventKey={i} title={item} key={i} name={item}>
                 <Devices devices={this.state.devices[item]} name={item}></Devices>
               </Tab>
-          )
-        )}  
+            ))
+          }  
+          <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
+            { !_.isEmpty(this.state.devices) && !_.isEmpty(this.state.sites) 
+              ? <LocMap devices={this.state.devices} sites={this.state.sites}></LocMap>
+              : <p> Loading! </p>
+            }
+          </Tab>
         </Tabs>
       </div>
     );

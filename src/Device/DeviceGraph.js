@@ -41,8 +41,8 @@ class DeviceGraph extends Component {
       var values;
       var data;
 
-      if(this.props.device === 'gh2_co2Production_gas') {
-        this.props.callback;
+      if(this.props.device === 'gh2_co2Production_gas' && this.props.callback) {
+        this.props.callback("blah message");
       }
 
       if(!_.isEmpty(response.data.light_value)) {
@@ -127,7 +127,7 @@ class DeviceGraph extends Component {
         combinedSeries: null, 
         samples: null,
         samples2: null,
-        current: true,
+        error: true,
       });
       console.log(error);
     });

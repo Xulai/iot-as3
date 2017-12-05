@@ -5,12 +5,12 @@ import './SiteGraphs.css';
 
 class SiteGraphs extends Component {
   render() {
-    const { sampleRate, devices } = this.props;
+    const { sampleRate, devices, callback } = this.props;
     return (
         <ListGroup>
         {devices ? devices.map((row, index) => 
           <ListGroupItem key={index}>
-            <DeviceGraph callback={this.props.callback} sampleRate={sampleRate} device={row.id} name={"lumosity"}/>
+            <DeviceGraph callback={callback} sampleRate={sampleRate} device={row.id} name={"lumosity"}/>
           </ListGroupItem>
         ) : <p>No location selected</p>}
         </ListGroup>

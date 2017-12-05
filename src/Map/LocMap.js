@@ -42,8 +42,6 @@ class LocMap extends Component {
               devices: results.map(r => r.data)
             });
           });
-
-      console.log(this.state.devices);
   }
 
   switchGraphs = (siteId) => {
@@ -65,9 +63,8 @@ class LocMap extends Component {
 
   
   changeMessage = (text) => {
-
     this.setState({
-      message: 'new message'
+      message: text
     })
 
     console.log(this.state.message);
@@ -76,7 +73,6 @@ class LocMap extends Component {
   render() {
       
     const { devices, activeSite, activeDevices } = this.state;
-
     return (
         <div className="container">
           <div className="center-block" style={{height:"400px",width:"800px"}}>
@@ -97,7 +93,7 @@ class LocMap extends Component {
                   { !_.isEmpty(activeSite.zones) 
                     ?  activeSite.zones.map((zone, index) => 
                         <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
-                          <SiteGraphs callback={this.changeMessage} onClick={this.test} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
+                          <SiteGraphs callback={this.changeMessage} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
                         </Tab>
                       ) 
                     : null

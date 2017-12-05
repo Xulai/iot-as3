@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import ListGroup from 'react-bootstrap/lib/ListGroup';
-import ListGroupItem from 'react-bootstrap/lib/ListGroupItem';
+import {ListGroup, ListGroupItem} from 'react-bootstrap/lib';
 import DeviceGraph from './DeviceGraph';
 import './Devices.css';
 
@@ -10,7 +9,7 @@ class Devices extends Component {
       <ListGroup>
         {this.props.devices ? this.props.devices.map((row, index) => 
           <ListGroupItem key={index}>
-            <DeviceGraph device={row} name={this.props.name}/>
+            <DeviceGraph sampleRate={this.props.sampleRate} device={row} name={this.props.name}/>
           </ListGroupItem>
         ) : <p>Still Loading</p>}
       </ListGroup>

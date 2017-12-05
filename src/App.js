@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import * as SiteHelper from './DataHelper/SiteHelper';
 import * as DeviceHelper from './DataHelper/DeviceHelper';
-import Tabs from 'react-bootstrap/lib/Tabs';
-import Tab from 'react-bootstrap/lib/Tab';
+import {Tabs, Tab, FormGroup, FormControl} from 'react-bootstrap/lib';
 import Devices from './Device/Devices';
 import LocMap from './Map/LocMap';
 import _ from "lodash";
@@ -14,6 +13,7 @@ class App extends Component {
     super(props);
 
     this.state = {
+      sampleRate: "10minute",
       sites: [],
       devices: {},
     };
@@ -21,10 +21,8 @@ class App extends Component {
     SiteHelper.get()
       .then(response => {
         this.setState({ 
-          sites: response.data,
-          devices: this.state.devices
+          sites: response.data
         });
-        console.log(response.data);
       }) 
       .catch(function (error) {
         console.log(error);
@@ -33,17 +31,12 @@ class App extends Component {
     DeviceHelper.get()
       .then(response =>  {
         this.setState({ 
-          sites: this.state.sites,
           devices: response.data
         });
       }) 
       .catch(error => {
         console.log(error);
       });
-  }
-
-  handleClick = () => {
-    console.log('clicked on!');
   }
 
   render() {
@@ -59,19 +52,26 @@ class App extends Component {
         <p className="App-intro">
           Simple test with graphs
         </p>
-        <Tabs id="blah" defaultActiveKey={2}>
+        <FormGroup style={{width: "200px"}} controlId="formControlsSelect">
+          <FormControl componentClass="select" defaultValue="10minute" onChange={event => { this.setState({sampleRate: event.target.value}); }}>
+            <option value="minute">minute</option>
+            <option value="10minute">10minute</option>
+            <option value="hour">hour</option>
+          </FormControl>
+        </FormGroup>
+        <Tabs id="viewTabs" defaultActiveKey={5}>
           { 
             /* For every device in the devices object */
             Object.keys(this.state.devices).map((item, i) => (
               /* Create a tab with its info */
               <Tab eventKey={i} title={item} key={i} name={item}>
-                <Devices devices={this.state.devices[item]} name={item}></Devices>
+                <Devices sampleRate={this.state.sampleRate} devices={this.state.devices[item]} name={item}></Devices>
               </Tab>
             ))
           }  
           <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
             { !_.isEmpty(this.state.devices) && !_.isEmpty(this.state.sites) 
-              ? <LocMap devices={this.state.devices} sites={this.state.sites}></LocMap>
+              ? <LocMap sampleRate={this.state.sampleRate} devices={this.state.devices} sites={this.state.sites}></LocMap>
               : <p> Loading! </p>
             }
           </Tab>

@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import { withScriptjs, withGoogleMap, GoogleMap, Marker } from "react-google-maps"
 import axios from 'axios';
-import ListGroup from 'react-bootstrap/lib/ListGroup';
-import ListGroupItem from 'react-bootstrap/lib/ListGroupItem';
-import Tabs from 'react-bootstrap/lib/Tabs';
-import Tab from 'react-bootstrap/lib/Tab';
+import {Tabs, Tab, ListGroup, ListGroupItem} from 'react-bootstrap/lib';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
 import SiteGraphs from './SiteGraphs';
@@ -40,9 +37,7 @@ class LocMap extends Component {
       axios.all(promises)
           .then((results) => {
             this.setState({ 
-              devices: results.map(r => r.data),
-              activeSite: this.state.activeSite,
-              activeDevices: this.state.activeDevices
+              devices: results.map(r => r.data)
             });
           });
   }
@@ -57,7 +52,6 @@ class LocMap extends Component {
       });
 
       this.setState({ 
-        devices: this.state.devices,
         activeSite: _.find(this.props.sites, {id: siteId}),
         activeDevices: activeDevices
       });
@@ -83,13 +77,13 @@ class LocMap extends Component {
               /* For each Site */
               this.props.sites.map((item, index) => (
               /* Create a marker */
-                  <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }}onClick={(e) => this.switchGraphs(item.id, e)} />
+                  <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => this.switchGraphs(item.id, e)} />
               ))
           }  
       </GoogleMap>));
     return (
-        <div class="container">
-          <div class="center-block" style={{height:"400px",width:"800px"}}>
+        <div className="container">
+          <div className="center-block" style={{height:"400px",width:"800px"}}>
             <Map
                 googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
                 loadingElement={<div style={{ height: `100%` }} />}
@@ -100,11 +94,11 @@ class LocMap extends Component {
           {
             !_.isEmpty(activeSite)
             ? <Tabs id="blah" defaultActiveKey={0}>
-                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs devices={activeDevices}/></Tab>
+                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs sampleRate={this.props.sampleRate} devices={activeDevices}/></Tab>
                   { !_.isEmpty(activeSite.zones) 
                     ?  activeSite.zones.map((zone, index) => 
                         <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
-                          <SiteGraphs devices={_.partition(activeDevices, {zone_id: zone.id})}/>
+                          <SiteGraphs sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
                         </Tab>
                       ) 
                     : null

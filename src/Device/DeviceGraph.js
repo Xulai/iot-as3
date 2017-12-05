@@ -13,26 +13,32 @@ class DeviceGraph extends Component {
     super(props);
     
     this.state = {
-      samples: [],
+      combinedSeries: null, 
+      samples: null,
+      samples2: null,
       error: false,
     };
   }
 
   componentDidMount() {
-    this.getValues();
+    this.getValues(this.props.sampleRate);
     //console.log('mounted');
   }
+  componentWillReceiveProps(nextProps) {
+    if(nextProps.sampleRate !== this.props.sampleRate) {
+      this.getValues(nextProps.sampleRate);
+    }
+  }
 
-  getValues() {
-
-    DeviceHelper.showSampleRate(this.props.device, "10minute")
+  getValues(sampleRate) {
+    DeviceHelper.showSampleRate(this.props.device, sampleRate)
     .then(response => {
 
       var sensorName;
       var values;
       var data;
 
-      if(this.props.name === "lumosity") {
+      if(!_.isEmpty(response.data.light_value)) {
         sensorName = "light";
         values = response.data.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         data = {
@@ -40,7 +46,7 @@ class DeviceGraph extends Component {
           "columns": ["time", "value"],
           "points": values
         };		
-      } else if(this.props.name === "gas") {
+      } else if(!_.isEmpty(response.data.gas_values)) {
         sensorName = "gas";
         values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         data = {
@@ -48,7 +54,7 @@ class DeviceGraph extends Component {
         "columns": ["time", "value"],
         "points": values
 		  };
-      } else if(this.props.name === "solar") {
+      } else if(!_.isEmpty(response.data.solar_value)) {
         sensorName = "solar";
         values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         data = {
@@ -56,7 +62,7 @@ class DeviceGraph extends Component {
           "columns": ["time", "value"],
           "points": values
         };
-      } else if(this.props.name === "hydrometer") {
+      } else if(!_.isEmpty(response.data.moisture_value)) {
         sensorName = "hydrometer";
         values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         data = {
@@ -64,7 +70,7 @@ class DeviceGraph extends Component {
           "columns": ["time", "value"],
           "points": values
         };
-      } else if(this.props.name === "tempHumid") {
+      } else if(!_.isEmpty(response.data.temperature_value)) {
         sensorName = "Temperature and Humidity";
         values = response.data.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         data = {
@@ -80,26 +86,38 @@ class DeviceGraph extends Component {
           "columns": ["time", "value"],
           "points": humidityValues
         };
-        
+
         this.setState({
-          samples: new TimeSeries(humidityData),
+          samples2: new TimeSeries(humidityData),
           error: false,
         });
       }
 
-      var find = `${sensorName}_values`;
-
       var series = new TimeSeries(data);
+              
+      let combinedSeries = null;
+      
+      if(!_.isEmpty(this.state.samples2)) {
+        combinedSeries = TimeSeries.timeSeriesListMerge({
+            name: "combination",
+            seriesList: [series, this.state.samples2]
+        });
+      } else if (!_.isEmpty(series)) {
+        combinedSeries = series;
+      }
 
       this.setState({ 
+        combinedSeries: combinedSeries, 
         samples: series,
         error: false,
       });
 
     }) 
     .catch(error =>  {
-      this.setState({ 
-        samples: [],
+      this.setState({
+        combinedSeries: null, 
+        samples: null,
+        samples2: null,
         error: true,
       });
       console.log(error);
@@ -108,18 +126,19 @@ class DeviceGraph extends Component {
   
   render() {
 
-    const { samples, error } = this.state;
-
+    const { combinedSeries, samples, samples2, error } = this.state;
     return (
-      <div>{ samples.length != 0 && !error 
+      <div>{ !_.isEmpty(samples) && !error 
       ? 
-      <div class="center-block" style={{width:"700px"}}>
+      <div className="center-block" style={{width:"700px"}}>
         <h3>{this.props.device}</h3>
         <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
             <ChartRow height="300">
                 <YAxis id="axis1" label="" min={samples.min()} max={samples.max()} width="100" type="linear" format=",.2f"/>
                 <Charts>
                     <LineChart axis="axis1" series={samples}/>
+                    {//!_.isEmpty(samples2) ? <LineChart axis="axis2" series={samples2}/> : null
+                    }
                 </Charts>
             </ChartRow>
         </ChartContainer>

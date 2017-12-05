@@ -10,7 +10,7 @@ class SiteGraphs extends Component {
         <ListGroup>
         {devices ? devices.map((row, index) => 
           <ListGroupItem key={index}>
-            <DeviceGraph sampleRate={sampleRate} device={row.id} name={"lumosity"}/>
+            <DeviceGraph callback={this.props.callback} sampleRate={sampleRate} device={row.id} name={"lumosity"}/>
           </ListGroupItem>
         ) : <p>No location selected</p>}
         </ListGroup>

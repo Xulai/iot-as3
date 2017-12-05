@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
+import CheckRange from '../CheckRange';
 import './DeviceGraph.css';
 
 import { Charts, ChartContainer, ChartRow, YAxis, LineChart } from "react-timeseries-charts";
 import { Index, TimeSeries } from "pondjs";
 import * as moment from 'moment';
 
+var test = 'testing!';
 
 class DeviceGraph extends Component {
   constructor(props) {
@@ -16,7 +18,7 @@ class DeviceGraph extends Component {
       combinedSeries: null, 
       samples: null,
       samples2: null,
-      error: false,
+      error: false
     };
   }
 
@@ -30,13 +32,18 @@ class DeviceGraph extends Component {
     }
   }
 
-  getValues(sampleRate) {
+
+  getValues(sampleRate, props) {
     DeviceHelper.showSampleRate(this.props.device, sampleRate)
     .then(response => {
 
       var sensorName;
       var values;
       var data;
+
+      if(this.props.device === 'gh2_co2Production_gas') {
+        this.props.callback;
+      }
 
       if(!_.isEmpty(response.data.light_value)) {
         sensorName = "light";
@@ -79,6 +86,8 @@ class DeviceGraph extends Component {
           "points": values
         };
         
+        <CheckRange values={data.points} low={7} high={29} />
+
         //Don't think this is actually doing anything here - Trying to create both temp graphs and humidity graphs on the same page
         var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
         var humidityData = {
@@ -118,7 +127,7 @@ class DeviceGraph extends Component {
         combinedSeries: null, 
         samples: null,
         samples2: null,
-        error: true,
+        current: true,
       });
       console.log(error);
     });

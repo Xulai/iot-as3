@@ -1,13 +1,6 @@
 import React, { Component } from 'react';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
-// import LineChart from 'recharts/lib/chart/LineChart';
-// import XAxis from 'recharts/lib/cartesian/XAxis';
-// import YAxis from 'recharts/lib/cartesian/YAxis';
-// import Line from 'recharts/lib/cartesian/Line';
-// import CartesianGrid from 'recharts/lib/cartesian/CartesianGrid';
-// import Tooltip from 'recharts/lib/component/Tooltip';
-// import Legend from 'recharts/lib/component/Legend';
 import './DeviceGraph.css';
 
 import { Charts, ChartContainer, ChartRow, YAxis, LineChart } from "react-timeseries-charts";
@@ -36,62 +29,62 @@ class DeviceGraph extends Component {
     .then(response => {
 
       var sensorName;
-	  var values;
-	  var data;
+      var values;
+      var data;
 
       if(this.props.name === "lumosity") {
         sensorName = "light";
-		values = response.data.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		data = {
-			"name": "Light values",
-			"columns": ["time", "value"],
-			"points": values
-		};		
+        values = response.data.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        data = {
+          "name": "Light values",
+          "columns": ["time", "value"],
+          "points": values
+        };		
       } else if(this.props.name === "gas") {
-		  sensorName = "gas";
-		  values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		  data = {
-		  "name": "CO2 Generator",
-		  "columns": ["time", "value"],
-		  "points": values
+        sensorName = "gas";
+        values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        data = {
+        "name": "CO2 Generator",
+        "columns": ["time", "value"],
+        "points": values
 		  };
       } else if(this.props.name === "solar") {
         sensorName = "solar";
-		values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		data = {
-			"name": "Solar values",
-			"columns": ["time", "value"],
-			"points": values
-		};
+        values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        data = {
+          "name": "Solar values",
+          "columns": ["time", "value"],
+          "points": values
+        };
       } else if(this.props.name === "hydrometer") {
         sensorName = "hydrometer";
-		values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		data = {
-			"name": "Soil moisture values",
-			"columns": ["time", "value"],
-			"points": values
-		};
+        values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        data = {
+          "name": "Soil moisture values",
+          "columns": ["time", "value"],
+          "points": values
+        };
       } else if(this.props.name === "tempHumid") {
         sensorName = "Temperature and Humidity";
-		values = response.data.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		data = {
-			"name": "Temperature",
-			"columns": ["time", "value"],
-			"points": values
-		};
-		
-		//Don't think this is actually doing anything here - Trying to create both temp graphs and humidity graphs on the same page
-		var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-		var humidityData = {
-			"name": "Humidity",
-			"columns": ["time", "value"],
-			"points": humidityValues
-		};
-		
-		this.setState({
-			samples: new TimeSeries(humidityData),
-			error: false,
-		});
+        values = response.data.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        data = {
+          "name": "Temperature",
+          "columns": ["time", "value"],
+          "points": values
+        };
+        
+        //Don't think this is actually doing anything here - Trying to create both temp graphs and humidity graphs on the same page
+        var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+        var humidityData = {
+          "name": "Humidity",
+          "columns": ["time", "value"],
+          "points": humidityValues
+        };
+        
+        this.setState({
+          samples: new TimeSeries(humidityData),
+          error: false,
+        });
       }
 
       var find = `${sensorName}_values`;
@@ -120,7 +113,7 @@ class DeviceGraph extends Component {
     return (
       <div>{ samples.length != 0 && !error 
       ? 
-      <div>
+      <div class="center-block" style={{width:"700px"}}>
         <h3>{this.props.device}</h3>
         <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
             <ChartRow height="300">

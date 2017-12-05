@@ -3,8 +3,11 @@ import { withScriptjs, withGoogleMap, GoogleMap, Marker } from "react-google-map
 import axios from 'axios';
 import ListGroup from 'react-bootstrap/lib/ListGroup';
 import ListGroupItem from 'react-bootstrap/lib/ListGroupItem';
+import Tabs from 'react-bootstrap/lib/Tabs';
+import Tab from 'react-bootstrap/lib/Tab';
+import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
-import DeviceGraph from '../Device/DeviceGraph';
+import SiteGraphs from './SiteGraphs';
 import './LocMap.css';
 
 class LocMap extends Component {
@@ -14,6 +17,7 @@ class LocMap extends Component {
 
     this.state = {
       devices: null,
+      activeSite: null,
       activeDevices: null
     };
   }
@@ -37,6 +41,7 @@ class LocMap extends Component {
           .then((results) => {
             this.setState({ 
               devices: results.map(r => r.data),
+              activeSite: this.state.activeSite,
               activeDevices: this.state.activeDevices
             });
           });
@@ -53,6 +58,7 @@ class LocMap extends Component {
 
       this.setState({ 
         devices: this.state.devices,
+        activeSite: _.find(this.props.sites, {id: siteId}),
         activeDevices: activeDevices
       });
     }
@@ -60,10 +66,11 @@ class LocMap extends Component {
   
   render() {
       
-    const { devices, activeDevices } = this.state;
+    const { devices, activeSite, activeDevices } = this.state;
 
     var Map = withScriptjs(withGoogleMap(
         (props) => <GoogleMap
+        mapTypeId="satellite"
         zoom={16}
         center={{ lat: 51.3083, lng: 1.1036 }}
         defaultOptions={{
@@ -81,18 +88,30 @@ class LocMap extends Component {
           }  
       </GoogleMap>));
     return (
-        <div>
-        <Map
-            googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
-            loadingElement={<div style={{ height: `100%` }} />}
-            containerElement={<div style={{ height: `400px`, width: `800px` }} />}
-            mapElement={<div style={{ height: `100%` }} />} 
-        />
-        {activeDevices ? activeDevices.map((row, index) => 
-          <ListGroupItem key={index}>
-            <DeviceGraph device={row.id} name={"lumosity"}/>
-          </ListGroupItem>
-        ) : <p>No locations selected</p>}
+        <div class="container">
+          <div class="center-block" style={{height:"400px",width:"800px"}}>
+            <Map
+                googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
+                loadingElement={<div style={{ height: `100%` }} />}
+                containerElement={<div style={{ height: `400px`, width: `800px` }} />}
+                mapElement={<div style={{ height: `100%` }} />} 
+            />
+          </div>
+          {
+            !_.isEmpty(activeSite)
+            ? <Tabs id="blah" defaultActiveKey={0}>
+                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs devices={activeDevices}/></Tab>
+                  { !_.isEmpty(activeSite.zones) 
+                    ?  activeSite.zones.map((zone, index) => 
+                        <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
+                          <SiteGraphs devices={_.partition(activeDevices, {zone_id: zone.id})}/>
+                        </Tab>
+                      ) 
+                    : null
+                  }
+              </Tabs>
+            : <p>Pick a Location</p>
+          }
         </div>
     );
   }

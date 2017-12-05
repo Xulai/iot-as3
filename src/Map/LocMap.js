@@ -5,6 +5,7 @@ import {Tabs, Tab, ListGroup, ListGroupItem} from 'react-bootstrap/lib';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
 import SiteGraphs from './SiteGraphs';
+import FarmMap from './FarmMap';
 import './LocMap.css';
 
 class LocMap extends Component {
@@ -40,10 +41,13 @@ class LocMap extends Component {
               devices: results.map(r => r.data)
             });
           });
+
+      console.log(this.state.devices);
   }
 
-  switchGraphs(siteId) {
+  switchGraphs = (siteId) => {
     if(this.state.devices) {
+
       var activeDevices = [];
       this.state.devices.map((device) => {
         if(device.site_id === siteId) {
@@ -62,33 +66,17 @@ class LocMap extends Component {
       
     const { devices, activeSite, activeDevices } = this.state;
 
-    var Map = withScriptjs(withGoogleMap(
-        (props) => <GoogleMap
-        mapTypeId="satellite"
-        zoom={16}
-        center={{ lat: 51.3083, lng: 1.1036 }}
-        defaultOptions={{
-          disableDefaultUI: true,
-          gestureHandling: 'none',
-          zoomControl: false
-        }} 
-      >
-          { 
-              /* For each Site */
-              this.props.sites.map((item, index) => (
-              /* Create a marker */
-                  <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => this.switchGraphs(item.id, e)} />
-              ))
-          }  
-      </GoogleMap>));
     return (
         <div className="container">
           <div className="center-block" style={{height:"400px",width:"800px"}}>
-            <Map
+            <FarmMap
                 googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
                 loadingElement={<div style={{ height: `100%` }} />}
                 containerElement={<div style={{ height: `400px`, width: `800px` }} />}
                 mapElement={<div style={{ height: `100%` }} />} 
+                sites={this.props.sites} 
+                devices={devices} 
+                switchGraphs={this.switchGraphs}
             />
           </div>
           {

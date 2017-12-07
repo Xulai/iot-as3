@@ -1,23 +1,23 @@
 import React, { Component } from 'react';
-import { withScriptjs, withGoogleMap, GoogleMap, Marker } from "react-google-maps"
 import axios from 'axios';
 import {Tabs, Tab, ListGroup, ListGroupItem} from 'react-bootstrap/lib';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
 import SiteGraphs from './SiteGraphs';
 import FarmMap from './FarmMap';
+import CheckRange from '../CheckRange';
 import './LocMap.css';
 
 class LocMap extends Component {
 
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       devices: null,
       activeSite: null,
       activeDevices: null,
-      message: 'meh'
+      message: "Running smoothly."
     };
   }
  
@@ -63,16 +63,15 @@ class LocMap extends Component {
 
   
   changeMessage = (text) => {
+    console.log(text);
     this.setState({
       message: text
     })
-
-    console.log(this.state.message);
   }
   
   render() {
-      
-    const { devices, activeSite, activeDevices } = this.state;
+
+    const { devices, activeSite, activeDevices, message } = this.state;
     return (
         <div className="container">
           <div className="center-block" style={{height:"400px",width:"800px"}}>
@@ -84,8 +83,10 @@ class LocMap extends Component {
                 sites={this.props.sites} 
                 devices={devices} 
                 switchGraphs={this.switchGraphs}
+                message={message}
             />
           </div>
+          <div className="status">Status: {message}</div>
           {
             !_.isEmpty(activeSite)
             ? <Tabs id="blah" defaultActiveKey={0}>
@@ -93,7 +94,7 @@ class LocMap extends Component {
                   { !_.isEmpty(activeSite.zones) 
                     ?  activeSite.zones.map((zone, index) => 
                         <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
-                          <SiteGraphs callback={this.changeMessage} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
+                          <SiteGraphs callback={(e) => this.changeMessage(e)} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
                         </Tab>
                       ) 
                     : null

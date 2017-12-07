@@ -5,7 +5,10 @@ import './SiteGraphs.css';
 
 class SiteGraphs extends Component {
   render() {
-    const { sampleRate, devices, callback } = this.props;
+    const { sampleRate, devices, callback, text } = this.props;
+
+    
+
     return (
         <ListGroup>
         {devices ? devices.map((row, index) => 

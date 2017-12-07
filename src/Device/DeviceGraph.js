@@ -8,8 +8,6 @@ import { Charts, ChartContainer, ChartRow, YAxis, LineChart } from "react-timese
 import { Index, TimeSeries } from "pondjs";
 import * as moment from 'moment';
 
-var test = 'testing!';
-
 class DeviceGraph extends Component {
   constructor(props) {
     super(props);
@@ -18,7 +16,8 @@ class DeviceGraph extends Component {
       combinedSeries: null, 
       samples: null,
       samples2: null,
-      error: false
+      error: false,
+      text: 'testing message!'
     };
   }
 
@@ -41,8 +40,9 @@ class DeviceGraph extends Component {
       var values;
       var data;
 
+      console.log(this.props.callback);
       if(this.props.device === 'gh2_co2Production_gas' && this.props.callback) {
-        this.props.callback("blah message");
+        this.props.callback("it worked");
       }
 
       if(!_.isEmpty(response.data.light_value)) {

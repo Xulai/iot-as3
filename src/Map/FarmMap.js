@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { withScriptjs, withGoogleMap, GoogleMap, Marker } from "react-google-maps"
+import React from 'react';
+import { withScriptjs, withGoogleMap, GoogleMap, Marker, InfoWindow } from "react-google-maps"
 
 
 const FarmMap = withScriptjs(withGoogleMap((props) => 
@@ -16,8 +16,15 @@ const FarmMap = withScriptjs(withGoogleMap((props) =>
       { 
           /* For each Site */
           props.sites.map((item, index) => (
-          /* Create a marker */
-              <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => props.switchGraphs(item.id, e)} />
+          /* Create a marker & info window */
+   
+            <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => props.switchGraphs(item.id, e)}>
+              	<InfoWindow key={index} disableAutoPan={true} onCloseclick={index} key={`${item.id}_info_window`}>
+              		<span>{item.id} - {props.message}</span>
+              	</InfoWindow>
+          	</Marker>
+        
+        
           ))
       }  
   </GoogleMap>));

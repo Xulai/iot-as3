@@ -71,7 +71,7 @@ class LocMap extends Component {
   
   render() {
 
-    const { devices, activeSite, activeDevices, message } = this.state;
+    const { devices, activeSite, activeDevices, message, combinedSeries, samples, error } = this.state;
     return (
         <div className="container">
           <div className="center-block" style={{height:"400px",width:"800px"}}>
@@ -90,11 +90,11 @@ class LocMap extends Component {
           {
             !_.isEmpty(activeSite)
             ? <Tabs id="blah" defaultActiveKey={0}>
-                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs sampleRate={this.props.sampleRate} devices={activeDevices}/></Tab>
+                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs sites={this.props.sites} sampleRate={this.props.sampleRate} devices={activeDevices}/></Tab>
                   { !_.isEmpty(activeSite.zones) 
                     ?  activeSite.zones.map((zone, index) => 
                         <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
-                          <SiteGraphs callback={(e) => this.changeMessage(e)} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
+                          <SiteGraphs combinedSeries={combinedSeries} error={error} samples={samples} activeSite={activeSite} callback={(e) => this.changeMessage(e)} sites={this.props.sites} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
                         </Tab>
                       ) 
                     : null

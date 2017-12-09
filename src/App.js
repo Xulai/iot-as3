@@ -65,6 +65,10 @@ class App extends Component {
       });
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !_.isEqual(this.state.devices, nextProps.devices);
+  }
+  
   getAllValues(sampleRate) {
     if(_.isEmpty(sampleRate)) {
       sampleRate = this.state.sampleRate;
@@ -93,7 +97,7 @@ class App extends Component {
     newState[sampleRate] = _.cloneDeep(this.state[sampleRate]); 
 
     if(!_.isEmpty(responseData.light_value)) {
-      if(sampleRate === "30sec") {
+      if(sampleRate === "minute") {
         responseData.light_value = responseData.light_value.filter(function(_, i) {
           return (i + 1) % 2;
         })          
@@ -107,7 +111,7 @@ class App extends Component {
       };    
       newState[sampleRate][device] = new TimeSeries(data);
     } else if(!_.isEmpty(responseData.gas_values)) {
-      if(sampleRate === "30sec") {
+      if(sampleRate === "minute") {
         responseData.gas_values = responseData.gas_values.filter(function(_, i) {
           return (i + 1) % 2;
         })          
@@ -121,7 +125,7 @@ class App extends Component {
       };
       newState[sampleRate][device] = new TimeSeries(data);
     } else if(!_.isEmpty(responseData.solar_value)) {
-      if(sampleRate === "30sec") {
+      if(sampleRate === "minute") {
         responseData.solar_value = responseData.solar_value.filter(function(_, i) {
           return (i + 1) % 2;
         })          
@@ -135,7 +139,7 @@ class App extends Component {
       };
       newState[sampleRate][device] = new TimeSeries(data);
     } else if(!_.isEmpty(responseData.moisture_value)) {
-      if(sampleRate === "30sec") {
+      if(sampleRate === "minute") {
         responseData.moisture_value = responseData.moisture_value.filter(function(_, i) {
           return (i + 1) % 2;
         })          
@@ -149,7 +153,7 @@ class App extends Component {
       };
       newState[sampleRate][device] = new TimeSeries(data);
     } else if(!_.isEmpty(responseData.temperature_value)) {
-      if(sampleRate === "30sec") {
+      if(sampleRate === "minute") {
         responseData.temperature_value = responseData.temperature_value.filter(function(_, i) {
           return (i + 1) % 2;
         })          
@@ -175,6 +179,7 @@ class App extends Component {
       newState[sampleRate][device + "_temperature"] = new TimeSeries(data);
       newState[sampleRate][device + "_humidity"] = new TimeSeries(humidityData);
     }
+
     this.setState(newState);
   }
 
@@ -184,11 +189,13 @@ class App extends Component {
     this.setState({sampleRate: newRate});
 
     if(_.isEmpty(this.state[newRate]))
-      this.getAllValues();
+      this.getAllValues(newRate);
   }
 
   render() {
-    const { deviceTypes, devices, sites, sampleRate} = this.state;
+    const { deviceTypes, devices, sites, sampleRate, minute, hour} = this.state;
+    const thirtysec = this.state["30sec"];
+    const tenminute = this.state["10minute"];
     
     return (
       <div className="App">
@@ -204,21 +211,28 @@ class App extends Component {
             <option value="hour">hour</option>
           </FormControl>
         </FormGroup>
-        {/* <Tabs id="viewTabs" defaultActiveKey={5}>
+        <Tabs id="viewTabs" defaultActiveKey={1}>
           { 
-            Object.keys(devices).map((item, i) => (
+            Object.keys(deviceTypes).map((item, i) => (
               <Tab eventKey={i} title={item} key={i} name={item}>
-                <Devices sampleRate={sampleRate} devices={_.filter(devices, ['type', item])} name={item}></Devices>
+                <Devices 
+                  sampleRate={sampleRate} 
+                  devices={_.filter(devices, ['type', item])} 
+                  thirtysec={thirtysec} 
+                  minute={minute} 
+                  tenminute={tenminute} 
+                  hour={hour} 
+                />
               </Tab>
             ))
           }  
-          <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
+          {/* <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
             { !_.isEmpty(devices) && !_.isEmpty(sites) 
               ? <LocMap sites={sites} deviceTypes={deviceTypes} devices={devices}></LocMap>
               : <p> Loading! </p>
             }
-          </Tab>
-        </Tabs> */}
+          </Tab> */}
+        </Tabs>
       </div>
     );
   }

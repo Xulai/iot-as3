@@ -18,11 +18,18 @@ class App extends Component {
     super(props);
 
     this.state = {
-      sampleRate: "10minute",
+      sampleRate: "hour",
       sites: [],
-      devices: {}
+      devices: [],
+      deviceTypes: {},
+      "30sec": {},
+      minute: {},
+      "10minute": {},
+      hour: {}
     };
+  }
 
+  componentWillMount() {
     SiteHelper.get()
       .then(response => {
         this.setState({ 
@@ -35,147 +42,153 @@ class App extends Component {
 
     DeviceHelper.get()
       .then(response =>  {
+        let devices = [];
+
+        Object.keys(response.data).map(deviceType => {
+          response.data[deviceType].map(device => {
+            devices.push({
+              name: device,
+              type: deviceType,
+            });
+          })
+        });
 
         this.setState({ 
-          devices: response.data
+          deviceTypes: response.data,
+          devices: devices
         });
 
-        Object.keys(this.state.devices).map(deviceType => {
-          let devices = this.state.devices;
-
-          this.state.devices[deviceType].map(device => {
-            console.log(device);
-            device.values.tenmin = this.getValues(device, this.state.sampleRate);
-          });
-
-          (new Promise((resolve, reject)  => {
-          
-            if (this.state.devices) {
-              resolve("Stuff worked!");
-            }
-            else {
-              reject(Error("It broke"));
-            }
-          })).then(function(result) {
-            console.log(result); // "Stuff worked!"
-          }, function(err) {
-            console.log(err); // Error: "It broke"
-          });
-        });
-
-        
+        this.getAllValues();
       }) 
       .catch(error => {
         console.log(error);
       });
-      
+  }
+
+  getAllValues(sampleRate) {
+    if(_.isEmpty(sampleRate)) {
+      sampleRate = this.state.sampleRate;
+    }
+    
+    this.state.devices.map(device => this.getValues(device.name, sampleRate));
   }
 
   getValues(device, sampleRate) {
-      DeviceHelper.showSampleRate(device, sampleRate)
+    var requestRate = sampleRate;
+    if(requestRate === "30sec") {
+      requestRate = "minute";
+    }
+
+    DeviceHelper.showSampleRate(device, requestRate)
       .then(response => {
-        var sensorName;
-        var values;
-        var data;
-
-        var duh = { 
-
-        };
-
-        if(!_.isEmpty(response.data.light_value)) {
-          sensorName = "light";
-          values = response.data.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          data = {
-            "name": "Light values",
-            "columns": ["time", "value"],
-            "points": values
-          };    
-        } else if(!_.isEmpty(response.data.gas_values)) {
-          sensorName = "gas";
-          values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          data = {
-            "name": "CO2 Generator",
-            "columns": ["time", "value"],
-            "points": values
-          };
-        } else if(!_.isEmpty(response.data.solar_value)) {
-          sensorName = "solar";
-          values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          data = {
-            "name": "Solar values",
-            "columns": ["time", "value"],
-            "points": values
-          };
-        } else if(!_.isEmpty(response.data.moisture_value)) {
-          sensorName = "hydrometer";
-          values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          data = {
-            "name": "Soil moisture values",
-            "columns": ["time", "value"],
-            "points": values
-          };
-        } else if(!_.isEmpty(response.data.temperature_value)) {
-          sensorName = "Temperature and Humidity";
-          values = response.data.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          data = {
-            "name": "Temperature",
-            "columns": ["time", "value"],
-            "points": values
-          };
-
-          //Don't think this is actually doing anything here - Trying to create both temp graphs and humidity graphs on the same page
-          var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-          var humidityData = {
-            "name": "Humidity",
-            "columns": ["time", "value"],
-            "points": humidityValues
-          };
-
-          this.setState({
-            samples2: new TimeSeries(humidityData),
-            error: false,
-          });
-        }
-
-        var series = new TimeSeries(data);
-                
-        let combinedSeries = null;
-        
-        if(!_.isEmpty(this.state.samples2)) {
-          combinedSeries = TimeSeries.timeSeriesListMerge({
-              name: "combination",
-              seriesList: [series, this.state.samples2]
-          });
-        } else if (!_.isEmpty(series)) {
-          combinedSeries = series;
-        }
-
-        this.setState({ 
-          samples: series,
-          error: false,
-        });
-
+        this.formatValues(response.data, device, sampleRate);
       }) 
       .catch(error =>  {
-        this.setState({
-          samples: null,
-          samples2: null,
-          error: true,
-        });
         console.log(error);
       });
-    }
+  }
 
-  componentWillReceiveProps(nextProps) {
-    if(nextProps.sampleRate !== this.props.sampleRate) {
-      this.getValues(nextProps.sampleRate);
+  formatValues(responseData, device, sampleRate) {
+    var newState = {}, values, data;
+    newState[sampleRate] = _.cloneDeep(this.state[sampleRate]); 
+
+    if(!_.isEmpty(responseData.light_value)) {
+      if(sampleRate === "30sec") {
+        responseData.light_value = responseData.light_value.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+      }
+
+      values = responseData.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      data = {
+        "name": "Light values",
+        "columns": ["time", "value"],
+        "points": values
+      };    
+      newState[sampleRate][device] = new TimeSeries(data);
+    } else if(!_.isEmpty(responseData.gas_values)) {
+      if(sampleRate === "30sec") {
+        responseData.gas_values = responseData.gas_values.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+      }
+
+      values = responseData.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      data = {
+        "name": "CO2 Generator",
+        "columns": ["time", "value"],
+        "points": values
+      };
+      newState[sampleRate][device] = new TimeSeries(data);
+    } else if(!_.isEmpty(responseData.solar_value)) {
+      if(sampleRate === "30sec") {
+        responseData.solar_value = responseData.solar_value.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+      }
+
+      values = responseData.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      data = {
+        "name": "Solar values",
+        "columns": ["time", "value"],
+        "points": values
+      };
+      newState[sampleRate][device] = new TimeSeries(data);
+    } else if(!_.isEmpty(responseData.moisture_value)) {
+      if(sampleRate === "30sec") {
+        responseData.moisture_value = responseData.moisture_value.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+      }
+
+      values = responseData.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      data = {
+        "name": "Soil moisture values",
+        "columns": ["time", "value"],
+        "points": values
+      };
+      newState[sampleRate][device] = new TimeSeries(data);
+    } else if(!_.isEmpty(responseData.temperature_value)) {
+      if(sampleRate === "30sec") {
+        responseData.temperature_value = responseData.temperature_value.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+        responseData.humidity_value = responseData.humidity_value.filter(function(_, i) {
+          return (i + 1) % 2;
+        })          
+      }
+
+      values = responseData.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      data = {
+        "name": "Temperature",
+        "columns": ["time", "value"],
+        "points": values
+      };
+
+      var humidityValues = responseData.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+      var humidityData = {
+        "name": "Humidity",
+        "columns": ["time", "value"],
+        "points": humidityValues
+      };
+
+      newState[sampleRate][device + "_temperature"] = new TimeSeries(data);
+      newState[sampleRate][device + "_humidity"] = new TimeSeries(humidityData);
     }
+    this.setState(newState);
+  }
+
+  changeSampleRate = (event) => {
+    let newRate = event.target.value;
+
+    this.setState({sampleRate: newRate});
+
+    if(_.isEmpty(this.state[newRate]))
+      this.getAllValues();
   }
 
   render() {
-
-    const { devices, sites, sampleRate, combinedSeries, samples, error } = this.state;
-    sites.map(site => site.status = "All is fine");
+    const { deviceTypes, devices, sites, sampleRate} = this.state;
     
     return (
       <div className="App">
@@ -184,29 +197,28 @@ class App extends Component {
           <h1 className="App-title">Cooksey's Farm</h1>
         </header>
         <FormGroup style={{width: "200px"}} controlId="formControlsSelect">
-          <FormControl componentClass="select" defaultValue="10minute" onChange={event => { this.setState({sampleRate: event.target.value}); }}>
+          <FormControl componentClass="select" defaultValue="hour" onChange={this.changeSampleRate}>
+            <option value="30sec">30sec</option>
             <option value="minute">minute</option>
             <option value="10minute">10minute</option>
             <option value="hour">hour</option>
           </FormControl>
         </FormGroup>
-        <Tabs id="viewTabs" defaultActiveKey={5}>
+        {/* <Tabs id="viewTabs" defaultActiveKey={5}>
           { 
-            /* For every device in the devices object */
-            Object.keys(this.state.devices).map((item, i) => (
-              /* Create a tab with its info */
+            Object.keys(devices).map((item, i) => (
               <Tab eventKey={i} title={item} key={i} name={item}>
-                <Devices sampleRate={this.state.sampleRate} devices={this.state.devices[item]} name={item}></Devices>
+                <Devices sampleRate={sampleRate} devices={_.filter(devices, ['type', item])} name={item}></Devices>
               </Tab>
             ))
           }  
           <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
-            { !_.isEmpty(this.state.devices) && !_.isEmpty(this.state.sites) 
-              ? <LocMap samples={samples} error={error} combinedSeries={combinedSeries} sampleRate={sampleRate} sites={sites} devices={this.state.devices} sites={this.state.sites}></LocMap>
+            { !_.isEmpty(devices) && !_.isEmpty(sites) 
+              ? <LocMap sites={sites} deviceTypes={deviceTypes} devices={devices}></LocMap>
               : <p> Loading! </p>
             }
           </Tab>
-        </Tabs>
+        </Tabs> */}
       </div>
     );
   }

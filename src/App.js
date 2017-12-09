@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
+import axios from 'axios';
 import * as SiteHelper from './DataHelper/SiteHelper';
 import * as DeviceHelper from './DataHelper/DeviceHelper';
 import {Tabs, Tab, FormGroup, FormControl} from 'react-bootstrap/lib';
@@ -42,27 +43,36 @@ class App extends Component {
 
     DeviceHelper.get()
       .then(response =>  {
-        let devices = [];
 
-        Object.keys(response.data).map(deviceType => {
-          response.data[deviceType].map(device => {
-            devices.push({
-              name: device,
-              type: deviceType,
+        this.getDevices(response.data) 
+          .then((results) => {
+            this.setState({ 
+              deviceTypes: response.data,
+              devices: results.map(r => _.assignIn(r.data, {type: this.getDeviceType(r.data, response.data)}))
             });
-          })
-        });
-
-        this.setState({ 
-          deviceTypes: response.data,
-          devices: devices
-        });
-
-        this.getAllValues();
+            this.getAllValues();
+          });
       }) 
       .catch(error => {
         console.log(error);
       });
+  }
+
+  getDeviceType(device, deviceTypes) {
+    return _.findKey(deviceTypes, (item) => (item.indexOf(device.id) !== -1));
+  }
+
+  getDevices(deviceTypes) {
+    let promises = [];
+
+    let keys = Object.keys(deviceTypes);
+    keys.map((key, index) => {
+      deviceTypes[key].map((device) => {
+        promises.push(DeviceHelper.show(device));
+      });
+    });
+    
+    return axios.all(promises);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -74,7 +84,7 @@ class App extends Component {
       sampleRate = this.state.sampleRate;
     }
     
-    this.state.devices.map(device => this.getValues(device.name, sampleRate));
+    this.state.devices.map(device => this.getValues(device.id, sampleRate));
   }
 
   getValues(device, sampleRate) {
@@ -211,7 +221,7 @@ class App extends Component {
             <option value="hour">hour</option>
           </FormControl>
         </FormGroup>
-        <Tabs id="viewTabs" defaultActiveKey={1}>
+        <Tabs id="viewTabs" defaultActiveKey={5}>
           { 
             Object.keys(deviceTypes).map((item, i) => (
               <Tab eventKey={i} title={item} key={i} name={item}>
@@ -226,12 +236,21 @@ class App extends Component {
               </Tab>
             ))
           }  
-          {/* <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
+          <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
             { !_.isEmpty(devices) && !_.isEmpty(sites) 
-              ? <LocMap sites={sites} deviceTypes={deviceTypes} devices={devices}></LocMap>
+              ? <LocMap 
+                  sites={sites} 
+                  deviceTypes={deviceTypes} 
+                  devices={devices}
+                  thirtysec={thirtysec} 
+                  sampleRate={sampleRate} 
+                  minute={minute} 
+                  tenminute={tenminute} 
+                  hour={hour} 
+                />
               : <p> Loading! </p>
             }
-          </Tab> */}
+          </Tab>
         </Tabs>
       </div>
     );

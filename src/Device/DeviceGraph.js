@@ -31,7 +31,7 @@ class DeviceGraph extends Component {
   render() {
     const { error } = this.state;
     const { sampleRate, device } = this.props;
-    const samples = this.props[this.getSampleRateString(sampleRate)]
+    const samples = this.props[this.getSampleRateString(sampleRate)];
 
     return (
       <div>{ !_.isEmpty(samples) && !error 

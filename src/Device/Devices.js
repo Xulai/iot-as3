@@ -35,10 +35,10 @@ class Devices extends Component {
                 sampleRate={this.props.sampleRate} 
                 device={device} 
                 type={"temp"}
-                thirtysec={this.props.thirtysec[device.name + "_temperature"]} 
-                minute={this.props.minute[device.name + "_temperature"]} 
-                tenminute={this.props.tenminute[device.name + "_temperature"]} 
-                hour={this.props.hour[device.name + "_temperature"]} 
+                thirtysec={this.props.thirtysec[device.id + "_temperature"]} 
+                minute={this.props.minute[device.id + "_temperature"]} 
+                tenminute={this.props.tenminute[device.id + "_temperature"]} 
+                hour={this.props.hour[device.id + "_temperature"]} 
               />
             </ListGroupItem>,
             <ListGroupItem key={device + "_humidity"}>
@@ -46,10 +46,10 @@ class Devices extends Component {
                 sampleRate={this.props.sampleRate} 
                 device={device} 
                 type={"humid"}
-                thirtysec={this.props.thirtysec[device.name + "_humidity"]} 
-                minute={this.props.minute[device.name + "_humidity"]} 
-                tenminute={this.props.tenminute[device.name + "_humidity"]} 
-                hour={this.props.hour[device.name + "_humidity"]} 
+                thirtysec={this.props.thirtysec[device.id + "_humidity"]} 
+                minute={this.props.minute[device.id + "_humidity"]} 
+                tenminute={this.props.tenminute[device.id + "_humidity"]} 
+                hour={this.props.hour[device.id + "_humidity"]} 
               />
             </ListGroupItem>
           ];} else {
@@ -58,10 +58,10 @@ class Devices extends Component {
                 sampleRate={this.props.sampleRate} 
                 device={device} 
                 type={device.type}
-                thirtysec={this.props.thirtysec[device.name]} 
-                minute={this.props.minute[device.name]} 
-                tenminute={this.props.tenminute[device.name]} 
-                hour={this.props.hour[device.name]} 
+                thirtysec={this.props.thirtysec[device.id]} 
+                minute={this.props.minute[device.id]} 
+                tenminute={this.props.tenminute[device.id]} 
+                hour={this.props.hour[device.id]} 
               />
             </ListGroupItem>;
            }

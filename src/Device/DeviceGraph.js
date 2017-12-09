@@ -226,7 +226,7 @@ class DeviceGraph extends Component {
       } else if(!_.isEmpty(response.data.gas_values)) {
         sensorName = "gas";
         values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-        values = this.checkAndFixAnomalousVals(values);
+        values = this.smoothValues(values);
         data = {
         "name": "CO2 Generator",
         "columns": ["time", "value"],
@@ -235,7 +235,7 @@ class DeviceGraph extends Component {
       } else if(!_.isEmpty(response.data.solar_value)) {
         sensorName = "solar";
         values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-        values = this.checkAndFixAnomalousVals(values);
+        values = this.smoothValues(values);
         data = {
           "name": "Solar values",
           "columns": ["time", "value"],
@@ -244,7 +244,7 @@ class DeviceGraph extends Component {
       } else if(!_.isEmpty(response.data.moisture_value)) {
         sensorName = "hydrometer";
         values = response.data.moisture_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-        values = this.checkAndFixAnomalousVals(values);
+        values = this.smoothValues(values);
         data = {
           "name": "Soil moisture values",
           "columns": ["time", "value"],
@@ -253,7 +253,7 @@ class DeviceGraph extends Component {
       } else if(!_.isEmpty(response.data.temperature_value)) {
         sensorName = "Temperature and Humidity";
         values = response.data.temperature_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-        values = this.checkAndFixAnomalousVals(values);
+        values = this.smoothValues(values);
         data = {
           "name": "Temperature",
           "columns": ["time", "value"],
@@ -261,7 +261,7 @@ class DeviceGraph extends Component {
         };
         
         var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-        humidityValues = this.checkAndFixAnomalousVals(humidityValues)
+        humidityValues = this.smoothValues(humidityValues)
         var humidityData = {
           "name": "Humidity",
           "columns": ["time", "value"],

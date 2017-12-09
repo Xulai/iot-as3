@@ -203,6 +203,28 @@ class DeviceGraph extends Component {
     return values;
   }
 
+  getDateRange(values) {
+
+    // 10 mins - week and day
+    // 1 min - day
+    // hour - day, week, month
+    
+    var startRange = new Date('December 09, 2017 00:00:00');
+    var week = moment().subtract(7, 'days').format('DD-MMM-YYYY');
+    var month = moment().subtract(1, 'months').format('MMM YYYY');
+    var currentDate;
+
+    for(var i = 0; i < values.length; i++) 
+    {
+      currentDate = new Date (values[i][0] * 1000);
+
+      if(currentDate.getTime() >= startRange.getTime())
+        return values.slice(i);
+    }
+    return [];
+  }
+
+
   getValues(sampleRate) {
     DeviceHelper.showSampleRate(this.props.device, sampleRate)
     .then(response => {
@@ -213,8 +235,15 @@ class DeviceGraph extends Component {
 
       if(!_.isEmpty(response.data.light_value)) {
         sensorName = "light";
-        //console.log(response.data.light_value);
-        values = response.data.light_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+
+        values = response.data.light_value;
+    
+
+        values = values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
+
+        var diditwork = this.getDateRange(values);
+        console.log(diditwork);
+
         //values = this.movingAverage(values, 20);
         values = this.smoothValues(values);
         //values = this.checkAndFixAnomalousVals(values);

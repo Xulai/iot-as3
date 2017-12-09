@@ -10,6 +10,7 @@ import CheckRange from './CheckRange';
 import { Index, TimeSeries } from "pondjs";
 import * as moment from 'moment';
 
+
 import './App.css';
 
 class App extends Component {
@@ -19,11 +20,7 @@ class App extends Component {
     this.state = {
       sampleRate: "10minute",
       sites: [],
-      devices: {},
-      combinedSeries: null, 
-      samples: null,
-      samples2: null,
-      error: false
+      devices: {}
     };
 
     SiteHelper.get()
@@ -38,50 +35,47 @@ class App extends Component {
 
     DeviceHelper.get()
       .then(response =>  {
-        this.setState({ 
-          devices: response.data
+        Object.keys(response.data).map(deviceType => {
+          let devices = this.state.devices;
+          
+          this.state.devices[deviceType].map(device => {
+            device.values.tenmin = this.getValues(deviceType, this.state.sampleRate);
+          });
+          (new Promise((resolve, reject) => {
+          
+            if (/* everything turned out fine */) {
+              resolve("Stuff worked!");
+            }
+            else {
+              reject(Error("It broke"));
+            }
+          })).then(function(result) {
+            console.log(result); // "Stuff worked!"
+          }, function(err) {
+            console.log(err); // Error: "It broke"
+          });
         });
 
-        
-        Object.keys(this.state.devices).map(device => {
-          this.getValues("gh2_co2Production_gas", this.state.sampleRate);
+        this.setState({ 
+          devices: response.data
         });
       }) 
       .catch(error => {
         console.log(error);
       });
-
       
   }
 
-  
-
   getValues(device, sampleRate) {
-      console.log('test');
       DeviceHelper.showSampleRate(device, sampleRate)
       .then(response => {
-
-
         var sensorName;
         var values;
         var data;
 
-       // console.log(this.props.activeSite.id)
+        var duh = { 
 
-        
-        var siteFilter = this.props.sites.filter(site => {
-          return site.id == this.props.activeSite.id;
-        });
-
-        for(var data in response.data) {
-          if (response.data.hasOwnProperty(data) && response.data.site_id === this.props.activeSite.id) {
-            console.log(response.data[data]);
-          }
-        }
-
-        // if(this.props.device === 'gh2_co2Production_gas' && this.props.callback) {
-        //   this.props.callback("it worked");
-        // }
+        };
 
         if(!_.isEmpty(response.data.light_value)) {
           sensorName = "light";
@@ -95,10 +89,10 @@ class App extends Component {
           sensorName = "gas";
           values = response.data.gas_values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
           data = {
-          "name": "CO2 Generator",
-          "columns": ["time", "value"],
-          "points": values
-        };
+            "name": "CO2 Generator",
+            "columns": ["time", "value"],
+            "points": values
+          };
         } else if(!_.isEmpty(response.data.solar_value)) {
           sensorName = "solar";
           values = response.data.solar_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
@@ -123,8 +117,6 @@ class App extends Component {
             "columns": ["time", "value"],
             "points": values
           };
-          
-          <CheckRange values={data.points} low={7} high={29} />
 
           //Don't think this is actually doing anything here - Trying to create both temp graphs and humidity graphs on the same page
           var humidityValues = response.data.humidity_value.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
@@ -154,7 +146,6 @@ class App extends Component {
         }
 
         this.setState({ 
-          combinedSeries: combinedSeries, 
           samples: series,
           error: false,
         });
@@ -162,7 +153,6 @@ class App extends Component {
       }) 
       .catch(error =>  {
         this.setState({
-          combinedSeries: null, 
           samples: null,
           samples2: null,
           error: true,
@@ -182,7 +172,6 @@ class App extends Component {
     const { devices, sites, sampleRate, combinedSeries, samples, error } = this.state;
     sites.map(site => site.status = "All is fine");
     
-
     return (
       <div className="App">
         <header className="App-header">

@@ -35,15 +35,22 @@ class App extends Component {
 
     DeviceHelper.get()
       .then(response =>  {
-        Object.keys(response.data).map(deviceType => {
+
+        this.setState({ 
+          devices: response.data
+        });
+
+        Object.keys(this.state.devices).map(deviceType => {
           let devices = this.state.devices;
-          
+
           this.state.devices[deviceType].map(device => {
-            device.values.tenmin = this.getValues(deviceType, this.state.sampleRate);
+            console.log(device);
+            device.values.tenmin = this.getValues(device, this.state.sampleRate);
           });
-          (new Promise((resolve, reject) => {
+
+          (new Promise((resolve, reject)  => {
           
-            if (/* everything turned out fine */) {
+            if (this.state.devices) {
               resolve("Stuff worked!");
             }
             else {
@@ -56,9 +63,7 @@ class App extends Component {
           });
         });
 
-        this.setState({ 
-          devices: response.data
-        });
+        
       }) 
       .catch(error => {
         console.log(error);

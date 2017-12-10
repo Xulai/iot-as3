@@ -143,14 +143,14 @@ class DeviceGraph extends Component {
   // }
   
   render() {
-    const { sampleRate, device} = this.props;
+    const { sampleRate, device, type} = this.props;
     const samples = this.props[this.getSampleRateString(sampleRate)];
 
     return (
       <div>{ !_.isEmpty(samples)
       ? 
         <div className="center-block" style={{width:"700px"}}>
-        <h3>{device.name} - {device.type}</h3>
+        <h3>{device.name} - {type}</h3>
         { 
           device.error !== true && samples.sizeValid() > 0
           ? 

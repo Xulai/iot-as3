@@ -346,18 +346,25 @@ class App extends Component {
    */
   checkAndChangeStatus = (responseData, site, message, values, highValue) => {
 
+    var newArray = this.state.sites;
+
     for(var property in responseData) {
         if(responseData.hasOwnProperty(property) && responseData.site_id === site) {
           // loop through the values, if light is more than suitable amount
           for(var i = 0; i < values.length; i++) {
             // change status message on site object
             if(values[i][1] > highValue) {
-              for (var j = 0; j < this.state.sites.length; j++) {
-                if (this.state.sites[j].id === site) {
-                    this.state.sites[j].status = message;
-                    console.log(this.state.sites[j]);
+              for (var j = 0; j < newArray.length; j++) {
+                if (newArray[j].id === site) {
+                    newArray[j].status = message;
 
-                    console.log(this.state.sites[j].status);
+                    this.setState({
+                      sites: newArray
+                    })
+
+                    console.log(newArray[j]);
+
+                    console.log(newArray[j].status);
                 }
               }
             return null;

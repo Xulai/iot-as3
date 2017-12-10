@@ -5,6 +5,7 @@
   "dependencies": {
     "axios": "^0.17.1",
     "bootstrap": "^3.3.7",
+    "immutability-helper": "^2.6.0",
     "lodash": "^4.17.4",
     "moment": "^2.19.3",
     "pondjs": "^0.8.7",

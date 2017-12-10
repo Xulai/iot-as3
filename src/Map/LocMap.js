@@ -1,51 +1,28 @@
 import React, { Component } from 'react';
-import { withScriptjs, withGoogleMap, GoogleMap, Marker } from "react-google-maps"
 import axios from 'axios';
 import {Tabs, Tab, ListGroup, ListGroupItem} from 'react-bootstrap/lib';
 import _ from "lodash";
 import * as DeviceHelper from '../DataHelper/DeviceHelper';
-import SiteGraphs from './SiteGraphs';
+import Devices from '../Device/Devices';
+import FarmMap from './FarmMap';
+import CheckRange from '../CheckRange';
 import './LocMap.css';
 
 class LocMap extends Component {
 
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
-      devices: null,
       activeSite: null,
-      activeDevices: null
+      activeDevices: null,
     };
   }
- 
-  componentDidMount() {
-    this.getDevices();
-    //console.log('mounted');
-  }
 
-  getDevices() {
-    let promises = [];
-
-      let keys = Object.keys(this.props.devices);
-      keys.map((key, index) => {
-        this.props.devices[key].map((device) => {
-          promises.push(DeviceHelper.show(device));
-        });
-      });
-      
-      axios.all(promises)
-          .then((results) => {
-            this.setState({ 
-              devices: results.map(r => r.data)
-            });
-          });
-  }
-
-  switchGraphs(siteId) {
-    if(this.state.devices) {
+  switchGraphs = (siteId) => {
+    if(this.props.devices) {
       var activeDevices = [];
-      this.state.devices.map((device) => {
+      this.props.devices.map((device) => {
         if(device.site_id === siteId) {
           activeDevices.push(device);
         }
@@ -59,46 +36,52 @@ class LocMap extends Component {
   }
   
   render() {
-      
-    const { devices, activeSite, activeDevices } = this.state;
-
-    var Map = withScriptjs(withGoogleMap(
-        (props) => <GoogleMap
-        mapTypeId="satellite"
-        zoom={16}
-        center={{ lat: 51.3083, lng: 1.1036 }}
-        defaultOptions={{
-          disableDefaultUI: true,
-          gestureHandling: 'none',
-          zoomControl: false
-        }} 
-      >
-          { 
-              /* For each Site */
-              this.props.sites.map((item, index) => (
-              /* Create a marker */
-                  <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => this.switchGraphs(item.id, e)} />
-              ))
-          }  
-      </GoogleMap>));
+    const { sites, sampleRate, devices, thirtysec, minute, tenminute, hour } = this.props;
+    const { activeSite, activeDevices } = this.state;
     return (
         <div className="container">
           <div className="center-block" style={{height:"400px",width:"800px"}}>
-            <Map
-                googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
-                loadingElement={<div style={{ height: `100%` }} />}
-                containerElement={<div style={{ height: `400px`, width: `800px` }} />}
-                mapElement={<div style={{ height: `100%` }} />} 
-            />
+            {
+               !_.isEmpty(sites)
+               ? <FarmMap
+                   googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
+                   loadingElement={<div style={{ height: `100%` }} />}
+                   containerElement={<div style={{ height: `400px`, width: `800px` }} />}
+                   mapElement={<div style={{ height: `100%` }} />} 
+                   sites={sites} 
+                   devices={devices} 
+                   switchGraphs={this.switchGraphs}
+               />
+               : <p>Loading Map</p>
+            }
           </div>
+          <div className="status">Status: Fine</div>
           {
             !_.isEmpty(activeSite)
-            ? <Tabs id="blah" defaultActiveKey={0}>
-                  <Tab eventKey={0} title={"All"} key={0} name={"All"}><SiteGraphs sampleRate={this.props.sampleRate} devices={activeDevices}/></Tab>
+            ? <Tabs id="zoneTabs" defaultActiveKey={0}>
+                  <Tab eventKey={0} title={"All"} key={0} name={"All"}>
+                    <Devices 
+                      sites={sites} 
+                      sampleRate={sampleRate} 
+                      devices={activeDevices}
+                      thirtysec={thirtysec} 
+                      minute={minute} 
+                      tenminute={tenminute} 
+                      hour={hour} 
+                    />
+                  </Tab>
                   { !_.isEmpty(activeSite.zones) 
                     ?  activeSite.zones.map((zone, index) => 
                         <Tab eventKey={index+1} title={zone.name} key={index+1} name={zone.name}>
-                          <SiteGraphs selectedDateRange={this.props.selectedDateRange} sampleRate={this.props.sampleRate} devices={_.filter(activeDevices, {zone_id: zone.id})}/>
+                          <Devices 
+                            sites={sites} 
+                            sampleRate={sampleRate} 
+                            devices={_.filter(activeDevices, {zone_id: zone.id})}
+                            thirtysec={thirtysec} 
+                            minute={minute} 
+                            tenminute={tenminute} 
+                            hour={hour} 
+                          />
                         </Tab>
                       ) 
                     : null

@@ -58,7 +58,7 @@ class App extends Component {
               deviceTypes: response.data,
               devices: results.map(r => _.assignIn(r.data, {type: this.getDeviceType(r.data, response.data)}))
             });
-            console.log(this.state.devices);
+            //console.log(this.state.devices);
             this.getAllValues();
           });
       }) 
@@ -199,14 +199,14 @@ class App extends Component {
     }
 
   
-    console.log(week);
+    //console.log(week);
 
-    console.log(startRange);
+    //console.log(startRange);
 
     
     for(var i = 0; i < values.length; i++) 
     {
-      currentDate = new Date(values[i][0] * 1000);
+      currentDate = new Date(values[i][0]);
 
       if(currentDate.getTime() >= startRange.getTime())
         return values.slice(i);
@@ -221,8 +221,8 @@ class App extends Component {
    * [checkAcceptableVariance description]
    * @return {[type]} [description]
    */
-  checkAcceptableVariance() {
-    const sampleRate = this.props.sampleRate;
+  checkAcceptableVariance(sampleRate) {
+    // const sampleRate = this.state.sampleRate;
     if(sampleRate === "minute")
       return 5; //+-5% acceptable variance
     else if(sampleRate === "10minute")
@@ -237,8 +237,8 @@ class App extends Component {
    * @param  {[type]}  val2 [description]
    * @return {Boolean}      [description]
    */
-  isAnomalous(val1, val2) {
-    var var1Variance = (val1/100) * this.checkAcceptableVariance();
+  isAnomalous(val1, val2, sampleRate) {
+    var var1Variance = (val1/100) * this.checkAcceptableVariance(sampleRate);
     if(Math.abs(val1 - val2) > var1Variance) {
      return true; 
     }
@@ -287,7 +287,7 @@ class App extends Component {
    * @param  {[type]} values [description]
    * @return {[type]}        [description]
    */
-  smoothValues(values) {
+  smoothValues(values, sampleRate) {
     var timespan;
     var avgofTimespan;
     var avg;
@@ -296,11 +296,11 @@ class App extends Component {
     var nextVal;
     var startPos = 0;
     var startTime = values[0][0];
-    if(this.props.sampleRate === "minute")
+    if(sampleRate === "minute")
       timespan = 1000; // 1 second
-    else if(this.props.sampleRate === "10minute")
+    else if(sampleRate === "10minute")
       timespan = 10000; //10000; // 10 seconds
-    else if(this.props.sampleRate === "hour")
+    else if(sampleRate === "hour")
       timespan = 60000; // 1 minute
     
     while(startTime <= values[values.length-1][0]){
@@ -317,9 +317,9 @@ class App extends Component {
         avg = (preVal + nextVal) / 2;
         // if(i+20 < values.length)
         //   avg = this.calcAvg(values.slice(i, i+20));
-        if(this.isAnomalous(preVal, currentVal) || this.isAnomalous(nextVal, currentVal))//) > (avgofTimespan.avg / 10)) //difference is more than 10% of avgofTimespan
+        if(this.isAnomalous(preVal, currentVal, sampleRate) || this.isAnomalous(nextVal, currentVal, sampleRate))//) > (avgofTimespan.avg / 10)) //difference is more than 10% of avgofTimespan
         {
-          //console.log(values[i][1]);
+          
           if((preVal - currentVal) > 0)
           {
             values[i][1] = preVal - (avgofTimespan.avg/10);
@@ -360,7 +360,7 @@ class App extends Component {
     var newState = {}, values, data;
     newState[sampleRate] = _.cloneDeep(this.state[sampleRate]); 
 
-    console.log(responseData);
+    //console.log(responseData);
     // sites = our object containing site info but no value
     // responseData - object contining site info but with values
     // for every value in responsedata.light value 
@@ -376,38 +376,18 @@ class App extends Component {
       if(sampleRate === "minute") {
         responseData.light_value = responseData.light_value.filter(function(_, i) {
           return (i + 1) % 2;
-        })          
+        })
       }
-
-      
-
       //
-      values = responseData.light_value;
-
-      // console.log(values);
-
-      for(var i = 0; i < responseData; i++) {
-        console.log(responseData[i].site_id)
-        // for(var j = 0; i < responseData.light_value) {
-
-        // }
-      }
-
-      values = values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-
-      
-
-      //
-      var diditwork = this.getDateRange(values, "Today");
+      //var diditwork = this.getDateRange(values, "Today");
       //console.log(diditwork);
-
-      values = responseData.light_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
+      //values = responseData.light_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
       //values = this.checkAndFixAnomalousVals(values);
-      
-      
-
+      values = responseData.light_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
+      //console.log(values);
+      values = this.smoothValues(values, sampleRate);
+      //console.log(values);
       data = {
         "name": "Light values",
         "columns": ["time", "value"],
@@ -423,7 +403,7 @@ class App extends Component {
 
       values = responseData.gas_values.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
+      values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
       data = {
         "name": "CO2 Generator",
@@ -440,7 +420,7 @@ class App extends Component {
 
       values = responseData.solar_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
+      values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
       data = {
         "name": "Solar values",
@@ -457,7 +437,7 @@ class App extends Component {
 
       values = responseData.moisture_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
+      values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
       data = {
         "name": "Soil moisture values",
@@ -477,7 +457,7 @@ class App extends Component {
 
       values = responseData.temperature_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
+      values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
       data = {
         "name": "Temperature",
@@ -487,7 +467,7 @@ class App extends Component {
 
       var humidityValues = responseData.humidity_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //values = this.movingAverage(values, 20);
-      values = this.smoothValues(values);
+      values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
       var humidityData = {
         "name": "Humidity",

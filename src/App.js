@@ -199,9 +199,9 @@ class App extends Component {
     }
 
   
-    console.log(week);
+    // console.log(week);
 
-    console.log(startRange);
+    // console.log(startRange);
 
     
     for(var i = 0; i < values.length; i++) 
@@ -343,9 +343,27 @@ class App extends Component {
    * @param  {[type]} siteObject [description]
    * @return {[type]}            [description]
    */
-  changeStatus(siteObject) {
+  checkAndChangeStatus = (responseData, site, message, values, highValue) => {
 
-    //
+    for(var property in responseData) {
+        if(responseData.hasOwnProperty(property) && responseData.site_id === site) {
+          // loop through the values, if light is more than suitable amount
+          for(var i = 0; i < values.length; i++) {
+            // change status message on site object
+            if(values[i][1] > highValue) {
+              for (var j = 0; j < this.state.sites.length; j++) {
+                if (this.state.sites[j].id === site) {
+                    this.state.sites[j].status = message;
+                    console.log(this.state.sites[j]);
+
+                    console.log(this.state.sites[j].status);
+                }
+              }
+            return null;
+            }
+          }
+        } 
+      }
   }
 
 
@@ -360,7 +378,7 @@ class App extends Component {
     var newState = {}, values, data;
     newState[sampleRate] = _.cloneDeep(this.state[sampleRate]); 
 
-    console.log(responseData);
+    //console.log(responseData);
     // sites = our object containing site info but no value
     // responseData - object contining site info but with values
     // for every value in responsedata.light value 
@@ -370,7 +388,8 @@ class App extends Component {
     // for every site in sites
     // find the one with the same id as found in responseData.light value
     // give that site a different status
-    
+    this.state.sites.map(site => site.status = "Fine");
+
 
     if(!_.isEmpty(responseData.light_value)) {
       if(sampleRate === "minute") {
@@ -379,23 +398,11 @@ class App extends Component {
         })          
       }
 
-      
-
-      //
       values = responseData.light_value;
 
-      // console.log(values);
-
-      for(var i = 0; i < responseData; i++) {
-        console.log(responseData[i].site_id)
-        // for(var j = 0; i < responseData.light_value) {
-
-        // }
-      }
-
+      this.checkAndChangeStatus(responseData, "outside", "danger", values, 100.00);
+  
       values = values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
-
-      
 
       //
       var diditwork = this.getDateRange(values, "Today");
@@ -523,8 +530,6 @@ class App extends Component {
     const { deviceTypes, devices, sites, sampleRate, minute, hour, dateRanges } = this.state;
     const thirtysec = this.state["30sec"];
     const tenminute = this.state["10minute"];
-
-    devices.map(device => device.status = "Fine");
     
     return (
       <div className="App">
@@ -578,7 +583,13 @@ class App extends Component {
             }
           </Tab>
         </Tabs>
+
+        {
+          this.state.sites.map((site, i) => <p key={i}>Status is:{site.status}</p>)
+        }
       </div>
+  
+      
     );
   }
 }

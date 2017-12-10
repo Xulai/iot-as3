@@ -52,15 +52,7 @@ class App extends Component {
     DeviceHelper.get()
       .then(response =>  {
 
-        this.getDevices(response.data) 
-          .then((results) => {
-            this.setState({ 
-              deviceTypes: response.data,
-              devices: results.map(r => _.assignIn(r.data, {type: this.getDeviceType(r.data, response.data)}))
-            });
-            //console.log(this.state.devices);
-            this.getAllValues();
-          });
+        this.getDevicesAndSetState(response.data);
       }) 
       .catch(error => {
         console.log(error);
@@ -76,17 +68,17 @@ class App extends Component {
       this.setState({
         dateRanges: ["Today", "This week"]
       });
-      console.log(this.state.dateRanges);
+      //console.log(this.state.dateRanges);
     } else if(sampleRate === "minute") {
       this.setState({
         dateRanges: ["Today"]
       });
-      console.log(this.state.dateRanges);
+      //console.log(this.state.dateRanges);
     } else if(sampleRate === "hour") {
       this.setState({
         dateRanges: ["Today", "This week", "This month"]
       });
-      console.log(this.state.dateRanges);
+      //console.log(this.state.dateRanges);
     }
   }
 
@@ -102,6 +94,22 @@ class App extends Component {
     return _.findKey(deviceTypes, (item) => (item.indexOf(device.id) !== -1));
   }
 
+  getDevicesAndSetState(deviceTypes, tries=0, tryLimit=3) {
+    if(tries < tryLimit) {
+      this.getDevices(deviceTypes) 
+      .then((results) => {
+        this.setState({ 
+          deviceTypes: deviceTypes,
+          devices: results.map(r => _.assignIn(r.data, {type: this.getDeviceType(r.data, deviceTypes)}))
+        });
+        this.getAllValues();
+      })
+      .catch(error => {
+        this.getDevicesAndSetState(deviceTypes, tries+1);
+      });
+    }
+    
+  }
 
   /**
    * [getDevices description]
@@ -114,7 +122,16 @@ class App extends Component {
     let keys = Object.keys(deviceTypes);
     keys.map((key, index) => {
       deviceTypes[key].map((device) => {
-        promises.push(DeviceHelper.show(device));
+        promises.push(
+          DeviceHelper.show(device)
+            .catch(error => {
+              return {
+                name: device,
+                id: device,
+                error: true
+              };
+            })
+        );
       });
     });
     
@@ -354,6 +371,7 @@ class App extends Component {
           for(var i = 0; i < values.length; i++) {
             // change status message on site object
             if(values[i][1] > highValue) {
+              
               for (var j = 0; j < newArray.length; j++) {
                 if (newArray[j].id === site) {
                     newArray[j].status = message;

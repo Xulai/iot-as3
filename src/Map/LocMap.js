@@ -44,7 +44,7 @@ class LocMap extends Component {
             {
                !_.isEmpty(sites)
                ? <FarmMap
-                   googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
+                   googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp?key=AIzaSyCmsA2qjFrpktzL_XnUnYzlSeBTX5xc5SE&libraries=geometry,drawing,places"
                    loadingElement={<div style={{ height: `100%` }} />}
                    containerElement={<div style={{ height: `400px`, width: `800px` }} />}
                    mapElement={<div style={{ height: `100%` }} />} 

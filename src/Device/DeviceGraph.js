@@ -156,7 +156,7 @@ class DeviceGraph extends Component {
           ? 
             <div>
               {
-                samples.size() !== samples.sizeValid() ? <p>There are some intermittent errors with the sensor</p> : null
+                samples.sizeValid() < (samples.size() - samples.size()/4)  ? <p>There are some intermittent errors with the sensor</p> : null
               }
               <ChartContainer test={samples} timeRange={samples.timerange()} width={700}>
                   <ChartRow height="300">

@@ -169,20 +169,45 @@ class DeviceGraph extends Component {
   }
 
 
-  getDateRange(values) {
+  getDateRange(values, startRange) {
 
     // 10 mins - week and day
     // 1 min - day
     // hour - day, week, month
-    
-    var startRange = new Date('December 09, 2017 00:00:00');
+    var date = new Date();
+    var week = new Date(date.setDate(date.getDate() - 7));
+    var month = new Date(date.setDate(date.getDate() - 31));
+    var startRange;
+
+    if(startRange === "Today") {
+      // Today's date
+      startRange = new Date();
+      // Starting from midnight
+      startRange.setHours(0,0,0,0);
+    } else if(startRange === "This week") {
+      // The past week
+      startRange = week;
+      // Starting from midnight
+      startRange.setHours(0,0,0,0);
+    } else if(startRange === "This month") {
+      // The past month
+      startRange = month;
+      // Starting from midnight
+      startRange.setHours(0,0,0,0);
+    }
+
+  
+    console.log(week);
+
+    console.log(startRange);
+
     var week = moment().subtract(7, 'days').format('DD-MMM-YYYY');
     var month = moment().subtract(1, 'months').format('MMM YYYY');
     var currentDate;
 
     for(var i = 0; i < values.length; i++) 
     {
-      currentDate = new Date (values[i][0] * 1000);
+      currentDate = new Date(values[i][0] * 1000);
 
       if(currentDate.getTime() >= startRange.getTime())
         return values.slice(i);
@@ -192,6 +217,7 @@ class DeviceGraph extends Component {
 
 
   getValues(sampleRate) {
+    console.log(this.props.selectedDateRange);
     DeviceHelper.showSampleRate(this.props.device, sampleRate)
     .then(response => {
 
@@ -208,7 +234,7 @@ class DeviceGraph extends Component {
 
         values = values.map(value => [parseInt(moment(value[0]).format('X')), value[1]]);
 
-        var diditwork = this.getDateRange(values);
+        var diditwork = this.getDateRange(values, "Today");
         console.log(diditwork);
 
 

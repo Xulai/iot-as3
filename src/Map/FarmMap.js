@@ -19,9 +19,6 @@ const FarmMap = withScriptjs(withGoogleMap((props) =>
           /* Create a marker & info window */
    
             <Marker key={index} label={item.id} position={{ lat: item.lat, lng: item.lon }} onClick={(e) => props.switchGraphs(item.id, e)}>
-              	<InfoWindow key={index} disableAutoPan={true} onCloseclick={index} key={`${item.id}_info_window`}>
-              		<span>{item.status}</span>
-              	</InfoWindow>
           	</Marker>
         
         

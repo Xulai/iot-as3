@@ -265,6 +265,48 @@ class App extends Component {
 
 
   /**
+   * [description]
+   * @param  {[type]} values [description]
+   * @return {[type]}        [description]
+   */
+  getLastTwoDays = (values) => {
+    var currentDate;
+    var endOfArray = values.length-1;
+    // var twoDaysAgo = ((new Date(values[endOfArray][0])).getDate() - 2).getTime();
+    var nowDate = new Date();
+    var twoDaysAgo = (new Date(nowDate.setDate(nowDate.getDate() - 2))).getTime();
+
+    for(var pos = endOfArray; pos >= 0; pos--)
+    {
+      // console.log(values[pos][0]);
+      currentDate = new Date(values[pos][0]);
+      if(currentDate.getTime() <= twoDaysAgo)
+        return values.slice(pos);
+    }
+    return values;
+  }
+
+
+
+  /**
+   * [description]
+   * @param  {[type]} values [description]
+   * @return {[type]}        [description]
+   */
+  avgOverall = (values) => {
+
+    values = this.getLastTwoDays(values);
+
+    var total = 0;
+    var n = values.length;
+    for(var i = 0; i < n; i++)
+    {
+      total += values[i][1];
+    }
+    return total/n;
+  }
+
+  /**
    * [avgOfTimespan description]
    * @param  {[type]} values    [description]
    * @param  {[type]} timeSpan  [description]
@@ -315,11 +357,11 @@ class App extends Component {
     var startPos = 0;
     var startTime = values[0][0];
     if(sampleRate === "minute")
-      timespan = 1000; // 1 second
+      timespan = 1000; 
     else if(sampleRate === "10minute")
-      timespan = 10000; //10000; // 10 seconds
+      timespan = 10000;  
     else if(sampleRate === "hour")
-      timespan = 60000; // 1 minute
+      timespan = 60000;
     
     while(startTime <= values[values.length-1][0]){
       avgofTimespan = this.avgOfTimespan(values, timespan, startTime, startPos);
@@ -356,40 +398,159 @@ class App extends Component {
     return values;
   }
 
-  /**
-   * [changeStatus description]
-   * @param  {[type]} siteObject [description]
-   * @return {[type]}            [description]
-   */
-  checkAndChangeStatus = (responseData, site, message, values, highValue) => {
 
+  /**
+   * [description]
+   * @param  {[type]} message       [description]
+   * @param  {[type]} overallAvg    [description]
+   * @param  {[type]} highThreshold [description]
+   * @param  {[type]} lowThreshold  [description]
+   * @return {[type]}               [description]
+   */
+  checkAndSetStatus = (responseData, site, highMessage, lowMessage, overallAvg, lowThreshold, highThreshold) => {
+
+    
+    var sendMessage = "";
     var newArray = this.state.sites;
 
-    for(var property in responseData) {
-        if(responseData.hasOwnProperty(property) && responseData.site_id === site) {
-          // loop through the values, if light is more than suitable amount
-          for(var i = 0; i < values.length; i++) {
-            // change status message on site object
-            if(values[i][1] > highValue) {
-              
-              for (var j = 0; j < newArray.length; j++) {
-                if (newArray[j].id === site) {
-                    newArray[j].status = message;
+    if(overallAvg > highThreshold) {
+      sendMessage = highMessage;
+    }
 
-                    this.setState({
-                      sites: newArray
-                    })
+    if(overallAvg < lowThreshold) {
+      sendMessage = lowMessage;
+    }
 
-                    console.log(newArray[j]);
-
-                    console.log(newArray[j].status);
-                }
-              }
-            return null;
+    if(sendMessage != "") {
+      for (var i = 0; i < newArray.length; i++) {
+        if (newArray[i].id === site) {
+            if (newArray[i].status != 'Your zones are all safe.' && newArray[i].status) {
+              newArray[i].status = `${newArray[i].status},${sendMessage} in ${responseData.name}`
+            } else {
+              newArray[i].status = `${sendMessage} in ${responseData.name}`;
             }
-          }
-        } 
+          
+            this.setState({ 
+              sites: newArray
+            })
+        }
       }
+    } else {
+      for(var i = 0; i < newArray.length; i++) {
+        if(!newArray[i].status) {
+          newArray[i].status = 'Your zones are all safe.';
+
+          this.setState({ 
+            sites: newArray
+          })
+        }
+      }
+    }
+  }
+
+
+  /**
+   * [analyseSiteConditions description]
+   * @param  {[type]} deviceID [description]
+   * @return {[type]}          [description]
+   */
+  analyseSiteConditions(responseData, values) {
+    var siteID = responseData.site_id;
+    var deviceID = responseData.id;
+
+    if(siteID === "gh1"){
+      // Light
+      if(deviceID === "gh1_plantzone_1_lux" || deviceID === "gh1_north_door_lux" || deviceID === "gh1_south_door_lux") {
+        this.checkAndSetStatus(responseData, "gh1", "Unexpectedly high light exposure - check sensor", "Low light exposure for Cacti", this.avgOverall(values), 5000.000, 100000.000);
+      }
+      // Gas
+      if(deviceID === "gh1_co2Production_gas") {
+        this.checkAndSetStatus(responseData, "gh1", "High CO2 levels - dangerous for humans", "Low CO2 levels - check sensor/environment", this.avgOverall(values), 100, 1000.000);
+      }
+      // Moisture
+      if(deviceID === "gh1_plantzone_1_moisture") {
+        //this.checkAndSetStatus(responseData, "gh2", "Too much light", "Not enough light", this.avgOverall(values), 0.000, 1000.000);
+      }
+      // Temperature
+      if(deviceID === "gh1_co2Production_temp" || deviceID === "gh1_south_door_temp" || deviceID === "gh1_north_door_temp" || deviceID === "gh1_plantzone_1_temp") {
+        this.checkAndSetStatus(responseData, "gh2", "High temp", "Low temp", this.avgOverall(values), 7, 29);
+      }
+    }
+
+
+    if(siteID === "gh2") {
+      // Light
+      if(deviceID === "gh2_plantzone_1_lux" || deviceID === "gh2_north_door_lux" || deviceID === "gh2_south_door_lux" || deviceID === "gh2_mains_lux") {
+        this.checkAndSetStatus(responseData, "gh2", "High light exposure for Lettuce - check sensor/environment", "Low light exposure for Lettuce", this.avgOverall(values), 0.000, 1000.000);
+      }
+      // Gas
+      if(deviceID === "gh2_co2Production_gas") {
+        //this.checkAndSetStatus(responseData, "gh2", "Too much light", "Not enough light", this.avgOverall(values), 0.000, 1000.000);
+      }
+      // Moisture
+      if(deviceID === "gh2_plantzone_1_moisture" ) {
+        //this.checkAndSetStatus(responseData, "gh2", "Too much light", "Not enough light", this.avgOverall(values), 0.000, 1000.000);
+      }
+      // Temperature
+      if(deviceID === "gh2_mains_moisture" || deviceID === "gh2_north_door_temp" || deviceID === "gh2_south_door_temp" || deviceID === "gh2_mains_temp" || deviceID === "gh2_plantzone_1_temp") {
+        this.checkAndSetStatus(responseData, "gh2", "Too much light", "Not enough light", this.avgOverall(values), 7, 18);
+      }
+    }
+
+
+    if(siteID === "gh3") {
+      // Light
+      if(deviceID === "gh3_seed_lux" || deviceID === "gh3_east_door_lux" || deviceID === "gh3_west_door_lux") {
+        this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 500.000, 1000.000);
+      }
+      // Gas
+      if(deviceID === "gh3_co2Production_gas") {
+        //this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 500.000, 1000.000);
+      }
+      // Moist
+      if(deviceID === "gh3_seed_moisture") {
+        //this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 500.000, 1000.000);
+      }
+      // Temperature
+      if(deviceID === "gh3_east_door_temp" || deviceID === "gh3_seed_temp" || deviceID === "gh3_west_door_temp") {
+        this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 10, 26);
+      }
+    }
+
+
+    if(siteID === "house") {
+      // Light
+      if(deviceID === "house_store_lux") {
+        this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 0.000, 40.000);
+      }
+
+      // Temperature
+      if(deviceID === "house_store_temp") {
+        //
+      }
+    }
+
+    //if(siteID === "outside") {
+      // Light
+      // if(deviceID === "outside_field_lux") {
+      //   //this.checkAndSetStatus(responseData, "gh3", "Too much light", "Not enough light", this.avgOverall(values), 500.000, 1000.000);
+      // }
+
+      // Temperature
+      // if(deviceID === "outside_field_temp" || deviceID === "outside_heap_temp") {
+      //   //
+      // }
+
+      // Moisture
+      // if(deviceID === "outside_field_moisture") {
+      //   //
+      // }
+
+      // Solar
+      // if(deviceID === "outside_shed_solar") {
+      //   //
+      // }
+    //}
   }
 
 
@@ -404,7 +565,7 @@ class App extends Component {
     var newState = {}, values, data;
     newState[sampleRate] = _.cloneDeep(this.state[sampleRate]); 
 
-    //console.log(responseData);
+    // console.log(responseData);
     // sites = our object containing site info but no value
     // responseData - object contining site info but with values
     // for every value in responsedata.light value 
@@ -414,7 +575,8 @@ class App extends Component {
     // for every site in sites
     // find the one with the same id as found in responseData.light value
     // give that site a different status
-    this.state.sites.map(site => site.status = "Fine");
+    
+    //this.state.sites.map(site => site.status = "Your zones are all safe.");
 
 
     if(!_.isEmpty(responseData.light_value)) {
@@ -434,8 +596,11 @@ class App extends Component {
       values = responseData.light_value.map(value => [parseInt(moment(value[0]).format('X')) * 1000, value[1]]);
       //console.log(values);
       values = this.smoothValues(values, sampleRate);
-      this.checkAndChangeStatus(responseData, "outside", "danger", values, 100.00);
-      //console.log(values);
+      
+      this.analyseSiteConditions(responseData, values);
+      
+      // Check the light values for each site against requirements
+
       data = {
         "name": "Light values",
         "columns": ["time", "value"],
@@ -453,6 +618,7 @@ class App extends Component {
       //values = this.movingAverage(values, 20);
       values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
+      this.analyseSiteConditions(responseData, values);
       data = {
         "name": "CO2 Generator",
         "columns": ["time", "value"],
@@ -470,6 +636,7 @@ class App extends Component {
       //values = this.movingAverage(values, 20);
       values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
+      this.analyseSiteConditions(responseData, values);
       data = {
         "name": "Solar values",
         "columns": ["time", "value"],
@@ -487,6 +654,7 @@ class App extends Component {
       //values = this.movingAverage(values, 20);
       values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
+      this.analyseSiteConditions(responseData, values);
       data = {
         "name": "Soil moisture values",
         "columns": ["time", "value"],
@@ -507,6 +675,7 @@ class App extends Component {
       //values = this.movingAverage(values, 20);
       values = this.smoothValues(values, sampleRate);
       //values = this.checkAndFixAnomalousVals(values);
+      this.analyseSiteConditions(responseData, values);
       data = {
         "name": "Temperature",
         "columns": ["time", "value"],
@@ -557,15 +726,8 @@ class App extends Component {
         <header className="App-header">
           <h1 className="App-title">Cooksey's Farm</h1>
         </header>
-        <FormGroup style={{width: "200px"}} controlId="formControlsSelect">
-          <FormControl componentClass="select" defaultValue="hour" onChange={this.changeSampleRate}>
-            <option value="30sec">30sec</option>
-            <option value="minute">minute</option>
-            <option value="10minute">10minute</option>
-            <option value="hour">hour</option>
-          </FormControl>
-        </FormGroup>
-
+        
+        { /* 
         <FormGroup style={{width: "200px"}} controlId="formControlsSelect">
           <FormControl componentClass="select" defaultValue="Today" onChange={event => { this.setState({selectedDateRange: event.target.value}); this.adjustRangeDependingOnSampleRate(sampleRate); }}>
             {
@@ -573,41 +735,63 @@ class App extends Component {
             }
           </FormControl>
         </FormGroup>
-        <Tabs id="viewTabs" defaultActiveKey={5}>
-          { 
-            Object.keys(deviceTypes).map((item, i) => (
-              <Tab eventKey={i} title={item} key={i} name={item}>
-                <Devices 
-                  sampleRate={sampleRate} 
-                  devices={_.filter(devices, ['type', item])} 
-                  thirtysec={thirtysec} 
-                  minute={minute} 
-                  tenminute={tenminute} 
-                  hour={hour} 
-                />
-              </Tab>
-            ))
-          }  
-          <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
-            { !_.isEmpty(devices) && !_.isEmpty(sites) 
-              ? <LocMap 
-                  sites={sites} 
-                  deviceTypes={deviceTypes} 
-                  devices={devices}
-                  thirtysec={thirtysec} 
-                  sampleRate={sampleRate} 
-                  minute={minute} 
-                  tenminute={tenminute} 
-                  hour={hour} 
-                />
-              : <p> Loading! </p>
-            }
-          </Tab>
-        </Tabs>
-
-        {
-          this.state.sites.map((site, i) => <p key={i}>Status is:{site.status}</p>)
-        }
+        */} 
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-12">
+              <FormGroup style={{width: "200px"}} controlId="formControlsSelect">
+                <FormControl componentClass="select" defaultValue="hour" onChange={this.changeSampleRate}>
+                  <option value="30sec">30sec</option>
+                  <option value="minute">minute</option>
+                  <option value="10minute">10minute</option>
+                  <option value="hour">hour</option>
+                </FormControl>
+              </FormGroup>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-7">
+              <Tabs id="viewTabs" defaultActiveKey={5}>
+                { 
+                  Object.keys(deviceTypes).map((item, i) => (
+                    <Tab eventKey={i} title={item} key={i} name={item}>
+                      <Devices 
+                        sampleRate={sampleRate} 
+                        devices={_.filter(devices, ['type', item])} 
+                        thirtysec={thirtysec} 
+                        minute={minute} 
+                        tenminute={tenminute} 
+                        hour={hour} 
+                      />
+                    </Tab>
+                  ))
+                }  
+                <Tab eventKey={5} title={"Map"} key={5} name={"Map"}>
+                  { !_.isEmpty(devices) && !_.isEmpty(sites) 
+                    ? <LocMap 
+                        sites={sites} 
+                        deviceTypes={deviceTypes} 
+                        devices={devices}
+                        thirtysec={thirtysec} 
+                        sampleRate={sampleRate} 
+                        minute={minute} 
+                        tenminute={tenminute} 
+                        hour={hour} 
+                      />
+                    : <p> Loading! </p>
+                  }
+                </Tab>
+              </Tabs>
+            </div>
+            <div className="col-4">
+              <ul>
+                {
+                  this.state.sites.map((site, i) => <li className="alert alert-info" key={i}>{site.id}: {site.status}</li>)
+                }
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
   
       

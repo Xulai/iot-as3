@@ -40,7 +40,7 @@ class LocMap extends Component {
     const { activeSite, activeDevices } = this.state;
     return (
         <div className="container">
-          <div className="center-block" style={{height:"400px",width:"800px"}}>
+          <div style={{height:"400px",width:"800px"}}>
             {
                !_.isEmpty(sites)
                ? <FarmMap
@@ -55,7 +55,6 @@ class LocMap extends Component {
                : <p>Loading Map</p>
             }
           </div>
-          <div className="status">Status: Fine</div>
           {
             !_.isEmpty(activeSite)
             ? <Tabs id="zoneTabs" defaultActiveKey={0}>
@@ -87,7 +86,14 @@ class LocMap extends Component {
                     : null
                   }
               </Tabs>
-            : <p>Pick a Location</p>
+            : 
+            <div className="container">
+              <div className="row">
+                <div className="col-7">
+                  <div className="alert alert-warning">Click on a site marker to choose location</div>
+                </div>
+              </div>
+            </div>
           }
         </div>
     );

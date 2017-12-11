@@ -149,7 +149,7 @@ class DeviceGraph extends Component {
     return (
       <div>{ !_.isEmpty(samples)
       ? 
-        <div className="center-block" style={{width:"700px"}}>
+        <div className="" style={{width:"400px"}}>
         <h3>{device.name} - {type}</h3>
         { 
           device.error !== true && samples.sizeValid() > 0

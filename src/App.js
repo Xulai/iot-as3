@@ -425,7 +425,7 @@ class App extends Component {
       for (var i = 0; i < newArray.length; i++) {
         if (newArray[i].id === site) {
             if (newArray[i].status != 'Your zones are all safe.' && newArray[i].status) {
-              newArray[i].status = `${newArray[i].status},${sendMessage} in ${responseData.name}`
+              newArray[i].status = `${newArray[i].status}, \r\n${sendMessage} in ${responseData.name}`
             } else {
               newArray[i].status = `${sendMessage} in ${responseData.name}`;
             }
@@ -786,7 +786,7 @@ class App extends Component {
             <div className="col-4">
               <ul>
                 {
-                  this.state.sites.map((site, i) => <li className="alert alert-info" key={i}>{site.id}: {site.status}</li>)
+                  this.state.sites.map((site, i) => <li className="alert alert-info" key={i}><strong>{site.id}:</strong> {site.status}</li>)
                 }
               </ul>
             </div>

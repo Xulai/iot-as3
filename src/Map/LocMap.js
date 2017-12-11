@@ -87,13 +87,13 @@ class LocMap extends Component {
                   }
               </Tabs>
             : 
-            <div className="container">
-              <div className="row">
-                <div className="col-7">
-                  <div className="alert alert-warning">Click on a site marker to choose location</div>
-                </div>
+           
+            <div className="row">
+              <div className="col-7">
+                <div className="alert alert-warning">Click on a site marker to choose location</div>
               </div>
             </div>
+         
           }
         </div>
     );
